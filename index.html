@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="th" data-theme="glass-dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TimeFlow ⏳ Desktop Widget</title>
+  <meta name="description" content="Minimalist Desktop Time & Year Progress Widget">
+  
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Prompt:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  
+  <!-- CSS -->
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  
+  <!-- Floating Widget Wrapper -->
+  <div class="widget-container" id="widget-container">
+    
+    <!-- Top Drag Bar & Controls -->
+    <header class="widget-header pywebview-drag-region">
+      <div class="header-left pywebview-drag-region">
+        <span class="widget-icon">⏳</span>
+        <span class="widget-title">TimeFlow</span>
+      </div>
+
+      <div class="header-controls">
+        <button class="ctrl-btn" id="btn-pin" title="ตรึงหน้าต่างให้อยู่บนสุด (Pin on Top)">📌</button>
+        <button class="ctrl-btn" id="btn-mini" title="ย่อเป็นแถบเล็ก (Mini Capsule)">➖</button>
+        <button class="ctrl-btn" id="btn-settings" title="การตั้งค่า & เวลาชีวิต">⚙️</button>
+        <button class="ctrl-btn btn-close" id="btn-close" title="ปิด Widget">✕</button>
+      </div>
+    </header>
+
+    <!-- 1. FULL CARD VIEW -->
+    <div class="view-full" id="view-full">
+      
+      <!-- Live Date & Clock -->
+      <div class="clock-section pywebview-drag-region">
+        <div class="live-time" id="live-time">00:00:00</div>
+        <div class="live-date" id="live-date">วันจันทร์ที่ 31 สิงหาคม 2026</div>
+      </div>
+
+      <!-- Navigation Tabs (Progress / Life Matrix) -->
+      <div class="widget-tabs">
+        <button class="tab-btn active" data-tab="progress">📊 ความคืบหน้าเวลา</button>
+        <button class="tab-btn" data-tab="life">🧬 ชีวิตใน 100 สัปดาห์</button>
+      </div>
+
+      <!-- TAB 1: Time Progress Bars -->
+      <div class="tab-content active" id="tab-progress">
+        
+        <!-- Year Progress (Hero) -->
+        <div class="progress-card hero-card">
+          <div class="progress-head">
+            <div class="head-title">
+              <span class="emoji">🌍</span>
+              <span class="label">ปี <span id="current-year">2026</span></span>
+            </div>
+            <div class="pct-badge" id="year-pct">0.0%</div>
+          </div>
+          <div class="bar-track hero-track">
+            <div class="bar-fill hero-fill" id="year-bar" style="width: 0%;"></div>
+          </div>
+          <div class="progress-sub" id="year-sub">เหลืออีก 0 วัน (0 ชั่วโมง)</div>
+        </div>
+
+        <!-- Month Progress -->
+        <div class="progress-card">
+          <div class="progress-head">
+            <div class="head-title">
+              <span class="emoji">🗓️</span>
+              <span class="label" id="month-name">เดือนนี้</span>
+            </div>
+            <div class="pct-badge" id="month-pct">0.0%</div>
+          </div>
+          <div class="bar-track">
+            <div class="bar-fill month-fill" id="month-bar" style="width: 0%;"></div>
+          </div>
+          <div class="progress-sub" id="month-sub">เหลืออีก 0 วัน</div>
+        </div>
+
+        <!-- Week Progress -->
+        <div class="progress-card">
+          <div class="progress-head">
+            <div class="head-title">
+              <span class="emoji">📅</span>
+              <span class="label" id="week-label">สัปดาห์นี้</span>
+            </div>
+            <div class="pct-badge" id="week-pct">0.0%</div>
+          </div>
+          <div class="bar-track">
+            <div class="bar-fill week-fill" id="week-bar" style="width: 0%;"></div>
+          </div>
+          <div class="progress-sub" id="week-sub">เหลืออีก 0 วัน</div>
+        </div>
+
+        <!-- Today Progress -->
+        <div class="progress-card">
+          <div class="progress-head">
+            <div class="head-title">
+              <span class="emoji">☀️</span>
+              <span class="label">วันนี้ (Today)</span>
+            </div>
+            <div class="pct-badge" id="day-pct">0.0%</div>
+          </div>
+          <div class="bar-track">
+            <div class="bar-fill day-fill" id="day-bar" style="width: 0%;"></div>
+          </div>
+          <div class="progress-sub" id="day-sub">เหลืออีก 0 ชั่วโมง 0 นาที</div>
+        </div>
+
+        <!-- Mindfulness Quote -->
+        <div class="quote-box">
+          <span class="quote-icon">💭</span>
+          <p class="quote-text" id="daily-quote">"เวลาคือสิ่งเดียวที่ผ่านไปแล้วไม่ย้อนกลับ จงใช้มันกับสิ่งที่สำคัญจริง ๆ"</p>
+        </div>
+
+      </div>
+
+      <!-- TAB 2: Life in Weeks Matrix -->
+      <div class="tab-content" id="tab-life">
+        <div class="life-summary-card">
+          <div class="life-age-box">
+            <span class="life-age-val" id="life-age-text">24 ปี 8 เดือน</span>
+            <span class="life-age-lbl">อายุปัจจุบันของคุณ</span>
+          </div>
+          <div class="life-pct-box">
+            <span class="life-pct-val" id="life-pct-text">30.8%</span>
+            <span class="life-pct-lbl">ของอายุเฉลี่ย 80 ปี</span>
+          </div>
+        </div>
+
+        <div class="matrix-info">
+          <span>🟩 สัปดาห์ที่ใช้ไปแล้ว</span>
+          <span>⬜ สัปดาห์ที่เหลืออยู่ในอนาคต</span>
+        </div>
+
+        <!-- Interactive 1000-Week Dot Matrix Grid -->
+        <div class="life-matrix-grid" id="life-matrix-grid">
+          <!-- Rendered dots -->
+        </div>
+
+        <div class="birthdate-config-row">
+          <label>📅 ปี/วันเกิดของคุณ:</label>
+          <input type="date" id="birthdate-input" value="2002-01-01">
+        </div>
+      </div>
+
+    </div>
+
+    <!-- 2. MINI CAPSULE VIEW (When Collapsed) -->
+    <div class="view-mini pywebview-drag-region" id="view-mini" style="display: none;">
+      <div class="mini-content pywebview-drag-region">
+        <span class="mini-emoji">⏳</span>
+        <span class="mini-year-text" id="mini-year-text">ปี 2026: <strong>66.8%</strong></span>
+        <div class="mini-bar-track">
+          <div class="mini-bar-fill" id="mini-bar-fill" style="width: 66.8%;"></div>
+        </div>
+        <button class="mini-expand-btn" id="btn-mini-expand" title="ขยายเต็มจอ">➕</button>
+      </div>
+    </div>
+
+    <!-- 3. SETTINGS MODAL -->
+    <div class="settings-drawer" id="settings-drawer">
+      <div class="drawer-header">
+        <h4>⚙️ การตั้งค่า Widget</h4>
+        <button class="btn-close-drawer" id="btn-close-settings">✕</button>
+      </div>
+
+      <div class="drawer-body">
+        <div class="setting-item">
+          <label>🎨 สไตล์ธีมกระจก (Theme):</label>
+          <select id="theme-selector">
+            <option value="glass-dark">🌌 Frosted Dark (กระจกมืด)</option>
+            <option value="glass-light">☀️ Frosted Light (กระจกสว่าง)</option>
+            <option value="glass-sage">🌿 Sage Green (ฟาร์มธรรมชาติ)</option>
+            <option value="glass-midnight">🌙 Deep Midnight (น้ำเงินราตรี)</option>
+          </select>
+        </div>
+
+        <div class="setting-item">
+          <label>🪟 ระดับความโปร่งแสง (Opacity):</label>
+          <input type="range" id="opacity-slider" min="50" max="100" value="85">
+          <span class="slider-val" id="opacity-val">85%</span>
+        </div>
+
+        <div class="setting-item">
+          <label>📌 ตรึงลอยบนสุดเสมอ (Always on Top):</label>
+          <input type="checkbox" id="always-on-top-check">
+        </div>
+
+        <div class="setting-item">
+          <label>💡 เคล็ดลับการใช้งาน:</label>
+          <p style="font-size:0.8rem; color:var(--text-muted); line-height:1.4;">
+            สามารถคลิกที่แถบด้านบนหรือส่วนว่างของการ์ดเพื่อลากย้ายไปวางมุมไหนของจอเดสก์ท็อปก็ได้ครับ
+          </p>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- JavaScript -->
+  <script src="script.js"></script>
+</body>
+</html>
