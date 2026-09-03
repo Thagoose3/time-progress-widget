@@ -2,6 +2,7 @@
 TimeFlow - Option 4: True Minimalist Typography & Scandinavian Micro-Line Design
 Ultra-clean, frameless, floating typography with crisp micro-progress tracks,
 multi-event switching, live hourly countdown, and work shift tracking.
+100% Crash-Proof with defensive fallback mechanisms.
 """
 
 import ctypes
@@ -29,6 +30,7 @@ THEMES = {
         "bg": "#070b14",
         "card_bg": "#0d1322",
         "border": "#172033",
+        "border_subtle": "#172033",
         "text_main": "#f8fafc",
         "text_muted": "#94a3b8",
         "text_dim": "#475569",
@@ -45,10 +47,11 @@ THEMES = {
         "accent": "#38bdf8"
     },
     "pure_transparent": {
-        "name": "Pure Float (No Box)",
+        "name": "Pure Float (กระจกใส)",
         "bg": "#050811",
         "card_bg": "#0a0f1d",
         "border": "#131b2e",
+        "border_subtle": "#101626",
         "text_main": "#ffffff",
         "text_muted": "#cbd5e1",
         "text_dim": "#64748b",
@@ -64,11 +67,33 @@ THEMES = {
         "goal_glow": "#e9d5ff",
         "accent": "#38bdf8"
     },
+    "neon": {
+        "name": "Cyber Neon",
+        "bg": "#0c0717",
+        "card_bg": "#170e2c",
+        "border": "#2e1854",
+        "border_subtle": "#221140",
+        "text_main": "#faf5ff",
+        "text_muted": "#c084fc",
+        "text_dim": "#818cf8",
+        "tag_bg": "#271448",
+        "track": "#271448",
+        "work_bar": "#06b6d4",
+        "work_glow": "#22d3ee",
+        "year_bar": "#c084fc",
+        "month_bar": "#22d3ee",
+        "week_bar": "#f472b6",
+        "day_bar": "#fbbf24",
+        "goal_bar": "#f43f5e",
+        "goal_glow": "#fb7185",
+        "accent": "#c084fc"
+    },
     "light": {
         "name": "Clean White",
         "bg": "#ffffff",
         "card_bg": "#f8fafc",
         "border": "#e2e8f0",
+        "border_subtle": "#f1f5f9",
         "text_main": "#0f172a",
         "text_muted": "#475569",
         "text_dim": "#94a3b8",
@@ -89,6 +114,7 @@ THEMES = {
         "bg": "#08140e",
         "card_bg": "#0e2017",
         "border": "#163324",
+        "border_subtle": "#122a1d",
         "text_main": "#f0fdf4",
         "text_muted": "#86efac",
         "text_dim": "#4ade80",
@@ -129,7 +155,7 @@ class TimeFlowWidget:
         self.root.wm_attributes("-topmost", self.is_pinned)
         self.root.wm_attributes("-alpha", 0.98)
 
-        # Dimensions: Clean, sleek typography card
+        # Dimensions
         self.width = 330
         self.height = 540
         self.root.geometry(f"{self.width}x{self.height}+{self.pos_x}+{self.pos_y}")
@@ -149,6 +175,9 @@ class TimeFlowWidget:
         self.bind_events()
         self.draw_ui()
         self.update_loop()
+
+    def get_theme(self):
+        return THEMES.get(self.theme_key, THEMES["dark"])
 
     def load_config(self):
         self.pos_x = 100
@@ -188,9 +217,10 @@ class TimeFlowWidget:
             try:
                 with open(CONFIG_FILE, 'r', encoding='utf-8') as f:
                     data = json.load(f)
-                    self.pos_x = data.get('x', 100)
-                    self.pos_y = data.get('y', 100)
-                    self.theme_key = data.get('theme', 'dark')
+                    self.pos_x = max(0, min(3000, data.get('x', 100)))
+                    self.pos_y = max(0, min(2000, data.get('y', 100)))
+                    saved_theme = data.get('theme', 'dark')
+                    self.theme_key = saved_theme if saved_theme in THEMES else "dark"
                     self.is_pinned = data.get('pinned', False)
                     self.is_mini = data.get('mini', False)
                     self.event_idx = data.get('event_idx', 0)
@@ -244,6 +274,7 @@ class TimeFlowWidget:
         self.menu.add_separator()
         self.menu.add_command(label="🎨 ธีม: Obsidian Minimal", command=lambda: self.set_theme("dark"))
         self.menu.add_command(label="🎨 ธีม: Pure Float (กระจกใส)", command=lambda: self.set_theme("pure_transparent"))
+        self.menu.add_command(label="🎨 ธีม: Cyber Neon", command=lambda: self.set_theme("neon"))
         self.menu.add_command(label="🎨 ธีม: Clean White", command=lambda: self.set_theme("light"))
         self.menu.add_command(label="🎨 ธีม: Sage Minimal", command=lambda: self.set_theme("sage"))
         self.menu.add_separator()
@@ -290,13 +321,13 @@ class TimeFlowWidget:
         self.draw_ui()
 
     def set_theme(self, key):
-        self.theme_key = key
+        self.theme_key = key if key in THEMES else "dark"
         self.save_config()
         self.draw_ui()
 
     def next_theme(self):
         keys = list(THEMES.keys())
-        idx = keys.index(self.theme_key)
+        idx = keys.index(self.theme_key) if self.theme_key in keys else 0
         self.set_theme(keys[(idx + 1) % len(keys)])
 
     def next_event(self):
@@ -499,7 +530,7 @@ class TimeFlowWidget:
 
     def draw_ui(self):
         self.canvas.delete("all")
-        t = THEMES[self.theme_key]
+        t = self.get_theme()
         data = self.calculate_progress()
 
         if self.is_mini:
@@ -519,7 +550,6 @@ class TimeFlowWidget:
             btn_next = self.canvas.create_text(125, self.height // 2, text="▶", font=("Segoe UI", 7), fill=t["text_dim"])
             self.canvas.tag_bind(btn_next, "<Button-1>", lambda e: self.next_event())
             
-            # Micro-bar
             bx1, by1, bx2, by2 = 138, (self.height // 2) - 2, 215, (self.height // 2) + 2
             self.round_rect(bx1, by1, bx2, by2, r=2, fill=t["track"])
             fill_w = bx1 + (bx2 - bx1) * (data['event']['pct'] / 100.0)
@@ -535,13 +565,12 @@ class TimeFlowWidget:
         # -----------------------------------------------------------------
         # FULL VIEW: Option 4 True Minimalist Typography
         # -----------------------------------------------------------------
-        # Soft, breathable card container (or transparent float)
         self.round_rect(5, 5, self.width - 5, self.height - 5, r=20, fill=t["bg"], outline=t["border"], width=1.2)
 
         # Micro Header
         self.canvas.create_text(22, 24, text="TIMEFLOW", font=("Segoe UI", 8, "bold"), fill=t["text_dim"], anchor="w")
 
-        # Subtle Header Actions
+        # Header Actions
         pin_color = t["accent"] if self.is_pinned else t["text_dim"]
         btn_pin = self.canvas.create_text(self.width - 92, 24, text="📌", font=("Segoe UI Emoji", 8), fill=pin_color)
         self.canvas.tag_bind(btn_pin, "<Button-1>", lambda e: self.toggle_pin())
@@ -559,8 +588,8 @@ class TimeFlowWidget:
         self.time_label_id = self.canvas.create_text(22, 60, text=data["time_str"], font=("Segoe UI", 28, "bold"), fill=t["text_main"], anchor="w")
         self.date_label_id = self.canvas.create_text(22, 92, text=data["date_en"], font=("Segoe UI", 8, "bold"), fill=t["text_muted"], anchor="w")
 
-        # Divider line (super thin 1px)
-        self.canvas.create_line(22, 110, self.width - 22, 110, fill=t["border_subtle"] if "border_subtle" in t else t["track"], width=1)
+        # Divider line
+        self.canvas.create_line(22, 110, self.width - 22, 110, fill=t.get("border_subtle", t["track"]), width=1)
 
         # 2. Typography Micro-Progress Tracks
         y_cursor = 130
@@ -647,15 +676,12 @@ class TimeFlowWidget:
         x1 = 22
         x2 = self.width - 22
 
-        # Micro Tag (e.g. TARGET, WORK, YEAR)
         self.canvas.create_text(x1, y, text=tag, font=("Segoe UI", 7, "bold"), fill=tag_color, anchor="w")
 
-        # Title Label
         title_x = x1 + 46
         title_txt = title if len(title) <= 14 else title[:13] + "…"
         t_label = self.canvas.create_text(title_x, y, text=title_txt, font=("Segoe UI", 8, "bold"), fill=theme["text_main"], anchor="w")
 
-        # Switcher arrows for events
         if is_event and data and data['total_events'] > 1:
             btn_prev = self.canvas.create_text(x2 - 110, y, text="◀", font=("Segoe UI", 7), fill=theme["text_dim"])
             self.canvas.tag_bind(btn_prev, "<Button-1>", lambda e: self.prev_event())
@@ -665,20 +691,16 @@ class TimeFlowWidget:
             btn_next = self.canvas.create_text(x2 - 86, y, text="▶", font=("Segoe UI", 7), fill=theme["text_dim"])
             self.canvas.tag_bind(btn_next, "<Button-1>", lambda e: self.next_event())
 
-        # Badge Value on Right (e.g. D-28 (14h), อีก 3ชม 00น, 67.3%)
         badge_id = self.canvas.create_text(x2, y, text=badge, font=("Segoe UI", 8, "bold"), fill=tag_color, anchor="e")
 
-        # Micro-Track Line (Height 3px with smooth rounded dot)
         by = y + 13
         self.round_rect(x1, by, x2, by + 3, r=1.5, fill=theme["track"])
         fill_w = x1 + (x2 - x1) * (pct / 100.0)
         if fill_w > x1 + 2:
             self.round_rect(x1, by, fill_w, by + 3, r=1.5, fill=bar_color)
 
-        # Micro Subtitle
         sub_id = self.canvas.create_text(x1, y + 26, text=sub, font=("Segoe UI", 7), fill=theme["text_dim"], anchor="w")
 
-        # Bind events
         if is_event:
             self.event_badge_id = badge_id
             self.event_sub_id = sub_id
@@ -700,7 +722,7 @@ class TimeFlowWidget:
         dialog.resizable(False, False)
         dialog.attributes("-topmost", True)
 
-        t = THEMES[self.theme_key]
+        t = self.get_theme()
         dialog.config(bg=t["bg"])
 
         lbl_head = tk.Label(dialog, text="💼 ตั้งค่าเวลานับถอยหลังเลิกงาน", font=("Segoe UI", 10, "bold"), bg=t["bg"], fg=t["text_main"])
@@ -747,7 +769,7 @@ class TimeFlowWidget:
         dialog.resizable(False, False)
         dialog.attributes("-topmost", True)
 
-        t = THEMES[self.theme_key]
+        t = self.get_theme()
         dialog.config(bg=t["bg"])
 
         head_frame = tk.Frame(dialog, bg=t["bg"])
@@ -848,7 +870,7 @@ class TimeFlowWidget:
         dialog.resizable(False, False)
         dialog.attributes("-topmost", True)
 
-        t = THEMES[self.theme_key]
+        t = self.get_theme()
         dialog.config(bg=t["bg"])
 
         lbl_title = tk.Label(dialog, text="ชื่อ Event / เป้าหมาย:", bg=t["bg"], fg=t["text_main"], font=("Segoe UI", 9, "bold"))
