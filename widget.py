@@ -1,8 +1,7 @@
 """
-TimeFlow - Option 4: True Minimalist Typography & Scandinavian Micro-Line Design
-Ultra-clean, frameless, floating typography with crisp micro-progress tracks,
+TimeFlow - Ultra-Minimalist & Polished Floating Desktop Widget
+Fixed spacing, no overlapping text, High-DPI crisp rendering,
 multi-event switching, live hourly countdown, and work shift tracking.
-100% Crash-Proof with defensive fallback mechanisms.
 """
 
 import ctypes
@@ -27,14 +26,13 @@ TRANS_COLOR = "#000001"
 THEMES = {
     "dark": {
         "name": "Obsidian Minimal",
-        "bg": "#070b14",
-        "card_bg": "#0d1322",
-        "border": "#172033",
-        "border_subtle": "#172033",
+        "bg": "#090d16",
+        "card_bg": "#121826",
+        "border": "#1e293b",
+        "border_subtle": "#162032",
         "text_main": "#f8fafc",
-        "text_muted": "#94a3b8",
-        "text_dim": "#475569",
-        "tag_bg": "#1e293b",
+        "text_muted": "#818cf8",
+        "text_sub": "#64748b",
         "track": "#1e293b",
         "work_bar": "#f59e0b",
         "work_glow": "#fbbf24",
@@ -55,7 +53,7 @@ THEMES = {
         "text_main": "#ffffff",
         "text_muted": "#cbd5e1",
         "text_dim": "#64748b",
-        "tag_bg": "#1e293b",
+        "text_sub": "#64748b",
         "track": "#1e293b",
         "work_bar": "#fbbf24",
         "work_glow": "#fef08a",
@@ -75,8 +73,7 @@ THEMES = {
         "border_subtle": "#221140",
         "text_main": "#faf5ff",
         "text_muted": "#c084fc",
-        "text_dim": "#818cf8",
-        "tag_bg": "#271448",
+        "text_sub": "#818cf8",
         "track": "#271448",
         "work_bar": "#06b6d4",
         "work_glow": "#22d3ee",
@@ -96,8 +93,7 @@ THEMES = {
         "border_subtle": "#f1f5f9",
         "text_main": "#0f172a",
         "text_muted": "#475569",
-        "text_dim": "#94a3b8",
-        "tag_bg": "#e2e8f0",
+        "text_sub": "#94a3b8",
         "track": "#e2e8f0",
         "work_bar": "#d97706",
         "work_glow": "#b45309",
@@ -117,8 +113,7 @@ THEMES = {
         "border_subtle": "#122a1d",
         "text_main": "#f0fdf4",
         "text_muted": "#86efac",
-        "text_dim": "#4ade80",
-        "tag_bg": "#1b3a2a",
+        "text_sub": "#4ade80",
         "track": "#1b3a2a",
         "work_bar": "#eab308",
         "work_glow": "#facc15",
@@ -155,9 +150,9 @@ class TimeFlowWidget:
         self.root.wm_attributes("-topmost", self.is_pinned)
         self.root.wm_attributes("-alpha", 0.98)
 
-        # Dimensions
-        self.width = 330
-        self.height = 540
+        # Proportional & Breathable dimensions
+        self.width = 350
+        self.height = 560
         self.root.geometry(f"{self.width}x{self.height}+{self.pos_x}+{self.pos_y}")
 
         self.drag_start_x = 0
@@ -310,11 +305,11 @@ class TimeFlowWidget:
     def toggle_mini(self):
         self.is_mini = not self.is_mini
         if self.is_mini:
-            self.width = 320
-            self.height = 54
-        else:
             self.width = 330
-            self.height = 540
+            self.height = 56
+        else:
+            self.width = 350
+            self.height = 560
         self.root.geometry(f"{self.width}x{self.height}")
         self.canvas.config(width=self.width, height=self.height)
         self.save_config()
@@ -361,10 +356,9 @@ class TimeFlowWidget:
         weekday = now.weekday()
         if weekday not in self.work_days:
             return {
-                "tag": "WORK",
-                "title": "WEEKEND",
+                "title": "เวลาทำงาน / เลิกงาน",
                 "badge": "วันหยุด 🏖️",
-                "sub": "วันหยุดสุดสัปดาห์ พักผ่อนให้เต็มที่",
+                "sub": "วันหยุดสุดสัปดาห์ พักผ่อนให้เต็มที่!",
                 "pct": 100.0
             }
 
@@ -381,7 +375,6 @@ class TimeFlowWidget:
             diff = start_dt - now
             h, m = diff.seconds // 3600, (diff.seconds % 3600) // 60
             return {
-                "tag": "WORK",
                 "title": f"เริ่มงาน {self.work_start_time}",
                 "badge": f"อีก {h}ชม {m}น",
                 "sub": f"เริ่มงานในอีก {h} ชม. {m} นาที",
@@ -398,7 +391,6 @@ class TimeFlowWidget:
             sub = f"เหลืออีก {rem_h} ชม. {rem_m} นาที (เลิกงาน {self.work_end_time})"
 
             return {
-                "tag": "WORK",
                 "title": f"เลิกงาน {self.work_end_time}",
                 "badge": badge,
                 "sub": sub,
@@ -406,7 +398,6 @@ class TimeFlowWidget:
             }
         else:
             return {
-                "tag": "WORK",
                 "title": f"เลิกงาน {self.work_end_time}",
                 "badge": "เลิกงานแล้ว 🎉",
                 "sub": "หมดเวลาทำงานแล้ว พักผ่อนให้สบายใจ",
@@ -420,7 +411,7 @@ class TimeFlowWidget:
 
         if not target_dt:
             return {
-                "title": event_item.get("title", "TARGET"),
+                "title": event_item.get("title", "เป้าหมาย"),
                 "badge": "ตั้งค่าวันที่",
                 "sub": "วันที่ไม่ถูกต้อง",
                 "pct": 0.0
@@ -460,7 +451,7 @@ class TimeFlowWidget:
             pct = 100.0
 
         return {
-            "title": event_item.get("title", "TARGET"),
+            "title": event_item.get("title", "เป้าหมาย"),
             "badge": badge,
             "sub": sub,
             "pct": pct
@@ -524,7 +515,7 @@ class TimeFlowWidget:
             "total_events": len(self.events),
             "event_num": self.event_idx + 1,
             "time_str": now.strftime("%H:%M:%S"),
-            "date_en": now.strftime("%a, %d %b %Y").upper(),
+            "date_en": now.strftime("%A, %d %B %Y"),
             "date_th": f"{THAI_DAYS[now.isoweekday() % 7]}ที่ {now.day} {THAI_MONTHS[month - 1]} {year}"
         }
 
@@ -535,76 +526,81 @@ class TimeFlowWidget:
 
         if self.is_mini:
             # -------------------------------------------------------------
-            # MINI CAPSULE (Option 4 Minimalist)
+            # MINI CAPSULE (Clean & Minimal)
             # -------------------------------------------------------------
             self.round_rect(4, 4, self.width - 4, self.height - 4, r=14, fill=t["bg"], outline=t["border"], width=1)
             
-            self.canvas.create_text(16, self.height // 2, text="TARGET", font=("Segoe UI", 7, "bold"), fill=t["text_dim"], anchor="w")
+            self.canvas.create_text(16, self.height // 2, text="🎯", font=("Segoe UI Emoji", 10), anchor="w")
             
-            btn_prev = self.canvas.create_text(58, self.height // 2, text="◀", font=("Segoe UI", 7), fill=t["text_dim"])
+            btn_prev = self.canvas.create_text(34, self.height // 2, text="◀", font=("Segoe UI", 7), fill=t["text_sub"])
             self.canvas.tag_bind(btn_prev, "<Button-1>", lambda e: self.prev_event())
 
-            title_txt = data['event']['title'][:8]
-            self.canvas.create_text(70, self.height // 2, text=title_txt, font=("Segoe UI", 9, "bold"), fill=t["text_main"], anchor="w")
+            title_txt = data['event']['title'][:9]
+            self.canvas.create_text(48, self.height // 2, text=title_txt, font=("Segoe UI", 9, "bold"), fill=t["text_main"], anchor="w")
 
-            btn_next = self.canvas.create_text(125, self.height // 2, text="▶", font=("Segoe UI", 7), fill=t["text_dim"])
+            btn_next = self.canvas.create_text(115, self.height // 2, text="▶", font=("Segoe UI", 7), fill=t["text_sub"])
             self.canvas.tag_bind(btn_next, "<Button-1>", lambda e: self.next_event())
             
-            bx1, by1, bx2, by2 = 138, (self.height // 2) - 2, 215, (self.height // 2) + 2
-            self.round_rect(bx1, by1, bx2, by2, r=2, fill=t["track"])
+            # Micro-bar
+            bx1, by1, bx2, by2 = 130, (self.height // 2) - 2.5, 220, (self.height // 2) + 2.5
+            self.round_rect(bx1, by1, bx2, by2, r=2.5, fill=t["track"])
             fill_w = bx1 + (bx2 - bx1) * (data['event']['pct'] / 100.0)
             if fill_w > bx1 + 2:
-                self.round_rect(bx1, by1, fill_w, by2, r=2, fill=t["goal_bar"])
+                self.round_rect(bx1, by1, fill_w, by2, r=2.5, fill=t["goal_bar"])
 
-            self.canvas.create_text(225, self.height // 2, text=data['event']['badge'], font=("Segoe UI", 8, "bold"), fill=t["goal_glow"], anchor="w")
+            self.canvas.create_text(230, self.height // 2, text=data['event']['badge'], font=("Segoe UI", 8, "bold"), fill=t["goal_glow"], anchor="w")
             
-            btn_exp = self.canvas.create_text(self.width - 16, self.height // 2, text="➕", font=("Segoe UI", 9), fill=t["text_dim"])
+            btn_exp = self.canvas.create_text(self.width - 16, self.height // 2, text="➕", font=("Segoe UI", 9), fill=t["text_sub"])
             self.canvas.tag_bind(btn_exp, "<Button-1>", lambda e: self.toggle_mini())
             return
 
         # -----------------------------------------------------------------
-        # FULL VIEW: Option 4 True Minimalist Typography
+        # FULL VIEW: Clean, Breathable, No-Overlap Typography Layout
         # -----------------------------------------------------------------
-        self.round_rect(5, 5, self.width - 5, self.height - 5, r=20, fill=t["bg"], outline=t["border"], width=1.2)
+        self.round_rect(5, 5, self.width - 5, self.height - 5, r=22, fill=t["bg"], outline=t["border"], width=1.2)
 
-        # Micro Header
-        self.canvas.create_text(22, 24, text="TIMEFLOW", font=("Segoe UI", 8, "bold"), fill=t["text_dim"], anchor="w")
+        # Header Bar
+        self.canvas.create_text(20, 24, text="⏳", font=("Segoe UI Emoji", 10), anchor="w")
+        self.canvas.create_text(38, 24, text="TimeFlow", font=("Segoe UI", 10, "bold"), fill=t["text_main"], anchor="w")
 
-        # Header Actions
-        pin_color = t["accent"] if self.is_pinned else t["text_dim"]
+        # Subtle Header Actions
+        btn_work = self.canvas.create_text(self.width - 114, 24, text="💼", font=("Segoe UI Emoji", 8), fill=t["text_sub"])
+        self.canvas.tag_bind(btn_work, "<Button-1>", lambda e: self.open_work_dialog())
+
+        pin_color = t["accent"] if self.is_pinned else t["text_sub"]
         btn_pin = self.canvas.create_text(self.width - 92, 24, text="📌", font=("Segoe UI Emoji", 8), fill=pin_color)
         self.canvas.tag_bind(btn_pin, "<Button-1>", lambda e: self.toggle_pin())
 
-        btn_mini = self.canvas.create_text(self.width - 70, 24, text="➖", font=("Segoe UI", 9), fill=t["text_dim"])
+        btn_mini = self.canvas.create_text(self.width - 70, 24, text="➖", font=("Segoe UI", 9), fill=t["text_sub"])
         self.canvas.tag_bind(btn_mini, "<Button-1>", lambda e: self.toggle_mini())
 
-        btn_th = self.canvas.create_text(self.width - 48, 24, text="🎨", font=("Segoe UI Emoji", 8), fill=t["text_dim"])
+        btn_th = self.canvas.create_text(self.width - 48, 24, text="🎨", font=("Segoe UI Emoji", 8), fill=t["text_sub"])
         self.canvas.tag_bind(btn_th, "<Button-1>", lambda e: self.next_theme())
 
-        btn_cl = self.canvas.create_text(self.width - 24, 24, text="✕", font=("Segoe UI", 9), fill=t["text_dim"])
+        btn_cl = self.canvas.create_text(self.width - 24, 24, text="✕", font=("Segoe UI", 9), fill=t["text_sub"])
         self.canvas.tag_bind(btn_cl, "<Button-1>", lambda e: self.close())
 
-        # 1. Big Hero Clock & Minimal Monospace Date
-        self.time_label_id = self.canvas.create_text(22, 60, text=data["time_str"], font=("Segoe UI", 28, "bold"), fill=t["text_main"], anchor="w")
-        self.date_label_id = self.canvas.create_text(22, 92, text=data["date_en"], font=("Segoe UI", 8, "bold"), fill=t["text_muted"], anchor="w")
+        # 1. Big Hero Clock & Minimal Date
+        self.time_label_id = self.canvas.create_text(20, 60, text=data["time_str"], font=("Segoe UI", 28, "bold"), fill=t["text_main"], anchor="w")
+        self.date_label_id = self.canvas.create_text(20, 92, text=data["date_th"], font=("Segoe UI", 9), fill=t["text_sub"], anchor="w")
 
         # Divider line
-        self.canvas.create_line(22, 110, self.width - 22, 110, fill=t.get("border_subtle", t["track"]), width=1)
+        self.canvas.create_line(20, 110, self.width - 20, 110, fill=t.get("border_subtle", t["track"]), width=1)
 
-        # 2. Typography Micro-Progress Tracks
+        # 2. Typography Micro-Progress Tracks (Perfect Spacing, No Overlaps)
         y_cursor = 130
         line_gap = 62
 
         # Item 1: TARGET (Custom Multiple Goals)
-        self.draw_typography_row(
+        self.draw_clean_row(
             y=y_cursor,
-            tag="TARGET",
-            tag_color=t["goal_glow"],
+            emoji="🎯",
             title=data['event']['title'],
             badge=data['event']['badge'],
             sub=data['event']['sub'],
             pct=data['event']['pct'],
             bar_color=t["goal_bar"],
+            badge_color=t["goal_glow"],
             is_event=True,
             data=data,
             theme=t
@@ -613,15 +609,15 @@ class TimeFlowWidget:
 
         # Item 2: WORK (Off-Work Countdown)
         if self.work_enabled:
-            self.draw_typography_row(
+            self.draw_clean_row(
                 y=y_cursor,
-                tag="WORK",
-                tag_color=t["work_glow"],
+                emoji="💼",
                 title=data['work']['title'],
                 badge=data['work']['badge'],
                 sub=data['work']['sub'],
                 pct=data['work']['pct'],
                 bar_color=t["work_bar"],
+                badge_color=t["work_glow"],
                 is_work=True,
                 data=data,
                 theme=t
@@ -629,87 +625,92 @@ class TimeFlowWidget:
             y_cursor += line_gap
 
         # Item 3: YEAR 2026
-        self.draw_typography_row(
+        self.draw_clean_row(
             y=y_cursor,
-            tag="YEAR",
-            tag_color=t["year_bar"],
+            emoji="🌍",
             title=f"ปี {data['year']}",
             badge=f"{data['year_pct']:.1f}%",
             sub=f"เหลืออีก {data['year_days_left']} วันในปีนี้",
             pct=data['year_pct'],
             bar_color=t["year_bar"],
+            badge_color=t["year_bar"],
             theme=t
         )
         y_cursor += line_gap
 
         # Item 4: MONTH
-        self.draw_typography_row(
+        self.draw_clean_row(
             y=y_cursor,
-            tag="MONTH",
-            tag_color=t["month_bar"],
-            title=data['month_name'],
+            emoji="🗓️",
+            title=f"เดือน{data['month_name']}",
             badge=f"{data['month_pct']:.1f}%",
             sub=f"เหลืออีก {data['month_days_left']} วันในเดือนนี้",
             pct=data['month_pct'],
             bar_color=t["month_bar"],
+            badge_color=t["month_bar"],
             theme=t
         )
         y_cursor += line_gap
 
         # Item 5: TODAY
-        self.draw_typography_row(
+        self.draw_clean_row(
             y=y_cursor,
-            tag="TODAY",
-            tag_color=t["day_bar"],
-            title="วันนี้ (24 Hours)",
+            emoji="☀️",
+            title="วันนี้ (Today)",
             badge=f"{data['day_pct']:.1f}%",
             sub=f"เหลืออีก {data['day_hours']} ชม. {data['day_mins']} นาที",
             pct=data['day_pct'],
             bar_color=t["day_bar"],
+            badge_color=t["day_bar"],
             theme=t
         )
 
-        # Bottom minimal hint
-        self.canvas.create_text(self.width // 2, self.height - 20, text="เวลาคือสิ่งเดียวที่ผ่านไปแล้วไม่ย้อนกลับ ✨", font=("Segoe UI", 7), fill=t["text_dim"])
+        # Bottom minimal quote
+        self.canvas.create_text(self.width // 2, self.height - 22, text="เวลาคือสิ่งเดียวที่ผ่านไปแล้วไม่ย้อนกลับ ✨", font=("Segoe UI", 8), fill=t["text_sub"])
 
-    def draw_typography_row(self, y, tag, tag_color, title, badge, sub, pct, bar_color, theme, is_event=False, is_work=False, data=None):
-        x1 = 22
-        x2 = self.width - 22
+    def draw_clean_row(self, y, emoji, title, badge, sub, pct, bar_color, badge_color, theme, is_event=False, is_work=False, data=None):
+        x1 = 20
+        x2 = self.width - 20
 
-        self.canvas.create_text(x1, y, text=tag, font=("Segoe UI", 7, "bold"), fill=tag_color, anchor="w")
+        # Emoji Icon
+        t_icon = self.canvas.create_text(x1, y, text=emoji, font=("Segoe UI Emoji", 10), anchor="w")
 
-        title_x = x1 + 46
-        title_txt = title if len(title) <= 14 else title[:13] + "…"
-        t_label = self.canvas.create_text(title_x, y, text=title_txt, font=("Segoe UI", 8, "bold"), fill=theme["text_main"], anchor="w")
+        # Title (With proper padding so it never clashes!)
+        t_title = self.canvas.create_text(x1 + 22, y, text=title, font=("Segoe UI", 9, "bold"), fill=theme["text_main"], anchor="w")
 
+        # Event Switcher Arrows (e.g. ◀ 1/3 ▶)
         if is_event and data and data['total_events'] > 1:
-            btn_prev = self.canvas.create_text(x2 - 110, y, text="◀", font=("Segoe UI", 7), fill=theme["text_dim"])
+            btn_prev = self.canvas.create_text(x2 - 120, y, text="◀", font=("Segoe UI", 8), fill=theme["text_sub"])
             self.canvas.tag_bind(btn_prev, "<Button-1>", lambda e: self.prev_event())
 
-            self.canvas.create_text(x2 - 98, y, text=f"{data['event_num']}/{data['total_events']}", font=("Segoe UI", 7), fill=theme["text_dim"])
+            self.canvas.create_text(x2 - 106, y, text=f"{data['event_num']}/{data['total_events']}", font=("Segoe UI", 7), fill=theme["text_sub"])
 
-            btn_next = self.canvas.create_text(x2 - 86, y, text="▶", font=("Segoe UI", 7), fill=theme["text_dim"])
+            btn_next = self.canvas.create_text(x2 - 92, y, text="▶", font=("Segoe UI", 8), fill=theme["text_sub"])
             self.canvas.tag_bind(btn_next, "<Button-1>", lambda e: self.next_event())
 
-        badge_id = self.canvas.create_text(x2, y, text=badge, font=("Segoe UI", 8, "bold"), fill=tag_color, anchor="e")
+        # Badge (Right-aligned, bold accent)
+        badge_id = self.canvas.create_text(x2, y, text=badge, font=("Segoe UI", 9, "bold"), fill=badge_color, anchor="e")
 
-        by = y + 13
-        self.round_rect(x1, by, x2, by + 3, r=1.5, fill=theme["track"])
+        # Micro-Track Line (Height 3.5px with smooth rounded cap)
+        by = y + 14
+        self.round_rect(x1, by, x2, by + 3.5, r=1.75, fill=theme["track"])
         fill_w = x1 + (x2 - x1) * (pct / 100.0)
         if fill_w > x1 + 2:
-            self.round_rect(x1, by, fill_w, by + 3, r=1.5, fill=bar_color)
+            self.round_rect(x1, by, fill_w, by + 3.5, r=1.75, fill=bar_color)
 
-        sub_id = self.canvas.create_text(x1, y + 26, text=sub, font=("Segoe UI", 7), fill=theme["text_dim"], anchor="w")
+        # Subtitle Text (Under track line)
+        sub_id = self.canvas.create_text(x1, y + 28, text=sub, font=("Segoe UI", 7.5), fill=theme["text_sub"], anchor="w")
 
+        # Event bindings
         if is_event:
             self.event_badge_id = badge_id
             self.event_sub_id = sub_id
-            for elem in [t_label, badge_id, sub_id]:
+            for elem in [t_icon, t_title, badge_id, sub_id]:
                 self.canvas.tag_bind(elem, "<Button-1>", lambda e: self.open_event_manager())
         elif is_work:
             self.work_badge_id = badge_id
             self.work_sub_id = sub_id
-            for elem in [t_label, badge_id, sub_id]:
+            for elem in [t_icon, t_title, badge_id, sub_id]:
                 self.canvas.tag_bind(elem, "<Button-1>", lambda e: self.open_work_dialog())
 
     # ---------------------------------------------------------------------
@@ -797,7 +798,7 @@ class TimeFlowWidget:
         scrollbar.pack(side="right", fill="y", padx=(0, 6), pady=6)
 
         if not self.events:
-            lbl_empty = tk.Label(scroll_frame, text="ยังไม่มี Event ในรายการ\nกดปุ่ม '+ เพิ่ม Event' เพื่อเริ่มต้น", font=("Segoe UI", 9), bg=t["bg"], fg=t["text_dim"], pady=40)
+            lbl_empty = tk.Label(scroll_frame, text="ยังไม่มี Event ในรายการ\nกดปุ่ม '+ เพิ่ม Event' เพื่อเริ่มต้น", font=("Segoe UI", 9), bg=t["bg"], fg=t["text_sub"], pady=40)
             lbl_empty.pack(fill="x")
 
         for idx, ev in enumerate(self.events):
@@ -816,7 +817,7 @@ class TimeFlowWidget:
             lbl_badge = tk.Label(top_row, text=ev_calc['badge'], font=("Segoe UI", 8, "bold"), bg=t["card_bg"], fg=t["goal_glow"])
             lbl_badge.pack(side="right")
 
-            lbl_sub = tk.Label(card, text=ev_calc['sub'], font=("Segoe UI", 7), bg=t["card_bg"], fg=t["text_dim"], anchor="w")
+            lbl_sub = tk.Label(card, text=ev_calc['sub'], font=("Segoe UI", 7), bg=t["card_bg"], fg=t["text_sub"], anchor="w")
             lbl_sub.pack(fill="x", padx=8, pady=(0, 4))
 
             btn_row = tk.Frame(card, bg=t["card_bg"])
@@ -832,13 +833,13 @@ class TimeFlowWidget:
                 return lambda: self.delete_event(i, dialog)
 
             if not is_active:
-                btn_sel = tk.Button(btn_row, text="เลือกแสดงบนหน้าจอ", font=("Segoe UI", 7), bg=t["tag_bg"], fg=t["text_main"], relief="flat", cursor="hand2", command=make_select_cmd(idx))
+                btn_sel = tk.Button(btn_row, text="เลือกแสดงบนหน้าจอ", font=("Segoe UI", 7), bg=t["border"], fg=t["text_main"], relief="flat", cursor="hand2", command=make_select_cmd(idx))
                 btn_sel.pack(side="left", padx=(0, 4))
 
-            btn_edit = tk.Button(btn_row, text="✏️ แก้ไข", font=("Segoe UI", 7), bg=t["tag_bg"], fg=t["text_main"], relief="flat", cursor="hand2", command=make_edit_cmd(idx))
+            btn_edit = tk.Button(btn_row, text="✏️ แก้ไข", font=("Segoe UI", 7), bg=t["border"], fg=t["text_main"], relief="flat", cursor="hand2", command=make_edit_cmd(idx))
             btn_edit.pack(side="left", padx=4)
 
-            btn_del = tk.Button(btn_row, text="🗑️ ลบ", font=("Segoe UI", 7), bg=t["tag_bg"], fg="#f87171", relief="flat", cursor="hand2", command=make_del_cmd(idx))
+            btn_del = tk.Button(btn_row, text="🗑️ ลบ", font=("Segoe UI", 7), bg=t["border"], fg="#f87171", relief="flat", cursor="hand2", command=make_del_cmd(idx))
             btn_del.pack(side="right", padx=4)
 
     def delete_event(self, idx, parent_dialog):
@@ -924,7 +925,7 @@ class TimeFlowWidget:
         # Live clock update
         if hasattr(self, 'time_label_id') and not self.is_mini:
             self.canvas.itemconfig(self.time_label_id, text=data["time_str"])
-            self.canvas.itemconfig(self.date_label_id, text=data["date_en"])
+            self.canvas.itemconfig(self.date_label_id, text=data["date_th"])
 
         # Live event countdown
         if hasattr(self, 'event_badge_id') and not self.is_mini:
