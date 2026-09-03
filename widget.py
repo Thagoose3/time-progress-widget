@@ -723,7 +723,7 @@ class TimeFlowWidget:
             self.round_rect(x1, by, fill_w, by + 4, r=2, fill=bar_color)
 
         # Subtitle Text (Under track line)
-        sub_id = self.canvas.create_text(x1, y + 28, text=sub, font=("Segoe UI", 7.5), fill=theme["text_sub"], anchor="w")
+        sub_id = self.canvas.create_text(x1, y + 28, text=sub, font=("Segoe UI", 8), fill=theme["text_sub"], anchor="w")
 
         # Event bindings
         if is_event:
