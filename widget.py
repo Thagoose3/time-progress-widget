@@ -1,8 +1,8 @@
 """
-TimeFlow - Option 4: True Minimalist Floating Typography (Pure Float on Wallpaper)
-100% Pure Transparent - No clunky boxes, floating directly on wallpaper.
-Crisp typography, 3px micro-tracks, multi-event carousel, live hourly countdown, and work shift tracking.
-100% Crash-Proof & Guaranteed reliable desktop launch.
+TimeFlow - Polished Solid Card Widget with Rich Multi-Color Themes
+(Cyberpunk 2077, Synthwave Retro, Obsidian Midnight, Nordic Forest, Warm Mocha, Clean White)
+High-DPI crisp rendering, high-contrast readability on any wallpaper,
+multi-event switching, live hourly countdown, and off-work tracking.
 """
 
 import ctypes
@@ -25,15 +25,54 @@ except Exception:
 TRANS_COLOR = "#000001"
 
 THEMES = {
-    "pure_float": {
-        "name": "Pure Float (ไร้กล่อง กลืนกับ Wallpaper 100%)",
-        "has_box": False,
-        "bg": TRANS_COLOR,
-        "card_bg": TRANS_COLOR,
-        "border": TRANS_COLOR,
+    "cyberpunk": {
+        "name": "🤖 Cyberpunk 2077 (Neon Tokyo)",
+        "bg": "#0d0718",
+        "card_bg": "#150d27",
+        "border": "#ff007f",
+        "border_subtle": "#2e144a",
         "text_main": "#ffffff",
-        "text_muted": "#cbd5e1",
-        "text_dim": "#94a3b8",
+        "text_muted": "#00f0ff",
+        "text_sub": "#c4b5fd",
+        "track": "#22133d",
+        "work_bar": "#fcee0a",
+        "work_glow": "#fef08a",
+        "year_bar": "#00f0ff",
+        "month_bar": "#05ffa1",
+        "week_bar": "#ff007f",
+        "day_bar": "#ff003c",
+        "goal_bar": "#ff007f",
+        "goal_glow": "#ff70a6",
+        "accent": "#00f0ff"
+    },
+    "synthwave": {
+        "name": "🌆 Synthwave 80s (Retro Sunset)",
+        "bg": "#140a20",
+        "card_bg": "#201033",
+        "border": "#e879f9",
+        "border_subtle": "#381854",
+        "text_main": "#fff5fc",
+        "text_muted": "#f472b6",
+        "text_sub": "#d8b4fe",
+        "track": "#301548",
+        "work_bar": "#fb923c",
+        "work_glow": "#fdba74",
+        "year_bar": "#f472b6",
+        "month_bar": "#38bdf8",
+        "week_bar": "#fb7185",
+        "day_bar": "#a78bfa",
+        "goal_bar": "#ec4899",
+        "goal_glow": "#f472b6",
+        "accent": "#f472b6"
+    },
+    "obsidian": {
+        "name": "🌌 Obsidian Midnight (Deep Navy)",
+        "bg": "#090e1a",
+        "card_bg": "#0f172a",
+        "border": "#1e293b",
+        "border_subtle": "#162032",
+        "text_main": "#f8fafc",
+        "text_muted": "#38bdf8",
         "text_sub": "#94a3b8",
         "track": "#1e293b",
         "work_bar": "#f59e0b",
@@ -46,58 +85,55 @@ THEMES = {
         "goal_glow": "#c084fc",
         "accent": "#38bdf8"
     },
-    "glass_minimal": {
-        "name": "Glass Minimal (กระจกโปร่งแสงบางเบา)",
-        "has_box": True,
-        "bg": "#070b14",
-        "card_bg": "#0c1322",
-        "border": "#162033",
-        "text_main": "#f8fafc",
-        "text_muted": "#94a3b8",
-        "text_dim": "#64748b",
-        "text_sub": "#64748b",
-        "track": "#1b2436",
-        "work_bar": "#f59e0b",
-        "work_glow": "#fbbf24",
-        "year_bar": "#38bdf8",
-        "month_bar": "#34d399",
-        "week_bar": "#fbbf24",
-        "day_bar": "#f43f5e",
-        "goal_bar": "#a855f7",
-        "goal_glow": "#c084fc",
-        "accent": "#38bdf8"
+    "forest": {
+        "name": "🌿 Nordic Forest (Matcha & Sage)",
+        "bg": "#08160f",
+        "card_bg": "#0e2419",
+        "border": "#1e4d35",
+        "border_subtle": "#143324",
+        "text_main": "#f0fdf4",
+        "text_muted": "#4ade80",
+        "text_sub": "#86efac",
+        "track": "#153625",
+        "work_bar": "#facc15",
+        "work_glow": "#fef08a",
+        "year_bar": "#4ade80",
+        "month_bar": "#22c55e",
+        "week_bar": "#2dd4bf",
+        "day_bar": "#fb7185",
+        "goal_bar": "#2dd4bf",
+        "goal_glow": "#5eead4",
+        "accent": "#4ade80"
     },
-    "cyber_neon": {
-        "name": "Cyber Neon (นีออนลอย)",
-        "has_box": False,
-        "bg": TRANS_COLOR,
-        "card_bg": TRANS_COLOR,
-        "border": TRANS_COLOR,
-        "text_main": "#ffffff",
-        "text_muted": "#e2e8f0",
-        "text_dim": "#94a3b8",
-        "text_sub": "#a5b4fc",
-        "track": "#23153c",
-        "work_bar": "#06b6d4",
-        "work_glow": "#22d3ee",
-        "year_bar": "#c084fc",
-        "month_bar": "#22d3ee",
-        "week_bar": "#f472b6",
-        "day_bar": "#fbbf24",
-        "goal_bar": "#f43f5e",
-        "goal_glow": "#fb7185",
-        "accent": "#c084fc"
+    "mocha": {
+        "name": "☕ Warm Mocha (Espresso Dark)",
+        "bg": "#150e09",
+        "card_bg": "#22170f",
+        "border": "#422e20",
+        "border_subtle": "#2e1f15",
+        "text_main": "#fdf8f5",
+        "text_muted": "#d4a373",
+        "text_sub": "#c4a482",
+        "track": "#322216",
+        "work_bar": "#e76f51",
+        "work_glow": "#f4a261",
+        "year_bar": "#d4a373",
+        "month_bar": "#8ab17d",
+        "week_bar": "#e9c46a",
+        "day_bar": "#e76f51",
+        "goal_bar": "#e76f51",
+        "goal_glow": "#f4a261",
+        "accent": "#d4a373"
     },
     "clean_white": {
-        "name": "Clean White (การ์ดขาวคลีน)",
-        "has_box": True,
+        "name": "🤍 Clean White (Light Mode)",
         "bg": "#ffffff",
         "card_bg": "#f8fafc",
-        "border": "#e2e8f0",
+        "border": "#cbd5e1",
+        "border_subtle": "#e2e8f0",
         "text_main": "#0f172a",
-        "text_muted": "#475569",
-        "text_dim": "#94a3b8",
-        "text_sub": "#94a3b8",
+        "text_muted": "#2563eb",
+        "text_sub": "#64748b",
         "track": "#e2e8f0",
         "work_bar": "#d97706",
         "work_glow": "#b45309",
@@ -126,17 +162,17 @@ class TimeFlowWidget:
 
         self.root = tk.Tk()
         self.root.title("TimeFlow")
-        self.root.overrideredirect(True) # Frameless & Borderless
+        self.root.overrideredirect(True) # Frameless
         
-        # Transparency settings
+        # Transparency settings for window canvas edges
         self.root.config(bg=TRANS_COLOR)
         self.root.wm_attributes("-transparentcolor", TRANS_COLOR)
         self.root.wm_attributes("-topmost", self.is_pinned)
-        self.root.wm_attributes("-alpha", 0.99)
+        self.root.wm_attributes("-alpha", 0.98)
 
-        # Dimensions: Sleek & Breathable
-        self.width = 340
-        self.height = 540
+        # Proportional & Breathable dimensions
+        self.width = 350
+        self.height = 560
         self.root.geometry(f"{self.width}x{self.height}+{self.pos_x}+{self.pos_y}")
 
         self.drag_start_x = 0
@@ -156,12 +192,12 @@ class TimeFlowWidget:
         self.update_loop()
 
     def get_theme(self):
-        return THEMES.get(self.theme_key, THEMES["pure_float"])
+        return THEMES.get(self.theme_key, THEMES["cyberpunk"])
 
     def load_config(self):
         self.pos_x = 100
         self.pos_y = 100
-        self.theme_key = "pure_float"
+        self.theme_key = "cyberpunk"
         self.is_pinned = False
         self.is_mini = False
         self.event_idx = 0
@@ -199,8 +235,8 @@ class TimeFlowWidget:
                     self.pos_x = max(0, min(2500, data.get('x', 100)))
                     self.pos_y = max(0, min(1500, data.get('y', 100)))
                     
-                    saved_theme = data.get('theme', 'pure_float')
-                    self.theme_key = saved_theme if saved_theme in THEMES else "pure_float"
+                    saved_theme = data.get('theme', 'cyberpunk')
+                    self.theme_key = saved_theme if saved_theme in THEMES else "cyberpunk"
                     
                     self.is_pinned = data.get('pinned', False)
                     self.is_mini = data.get('mini', False)
@@ -253,10 +289,12 @@ class TimeFlowWidget:
         self.menu.add_command(label="📌 ตรึงลอยบนสุด (Always on Top)", command=self.toggle_pin)
         self.menu.add_command(label="➖ สลับโหมดแคปซูลเล็ก (Mini Mode)", command=self.toggle_mini)
         self.menu.add_separator()
-        self.menu.add_command(label="🎨 ธีม: Pure Float (ไร้กล่องทึบ 100%)", command=lambda: self.set_theme("pure_float"))
-        self.menu.add_command(label="🎨 ธีม: Glass Minimal (กระจกโปร่งแสง)", command=lambda: self.set_theme("glass_minimal"))
-        self.menu.add_command(label="🎨 ธีม: Cyber Neon (นีออนลอย)", command=lambda: self.set_theme("cyber_neon"))
-        self.menu.add_command(label="🎨 ธีม: Clean White (การ์ดขาว)", command=lambda: self.set_theme("clean_white"))
+        self.menu.add_command(label="🤖 ธีม: Cyberpunk 2077", command=lambda: self.set_theme("cyberpunk"))
+        self.menu.add_command(label="🌆 ธีม: Synthwave 80s", command=lambda: self.set_theme("synthwave"))
+        self.menu.add_command(label="🌌 ธีม: Obsidian Midnight", command=lambda: self.set_theme("obsidian"))
+        self.menu.add_command(label="🌿 ธีม: Nordic Forest", command=lambda: self.set_theme("forest"))
+        self.menu.add_command(label="☕ ธีม: Warm Mocha", command=lambda: self.set_theme("mocha"))
+        self.menu.add_command(label="🤍 ธีม: Clean White", command=lambda: self.set_theme("clean_white"))
         self.menu.add_separator()
         self.menu.add_command(label="✕ ปิด Widget", command=self.close)
 
@@ -290,18 +328,18 @@ class TimeFlowWidget:
     def toggle_mini(self):
         self.is_mini = not self.is_mini
         if self.is_mini:
-            self.width = 320
-            self.height = 54
+            self.width = 330
+            self.height = 56
         else:
-            self.width = 340
-            self.height = 540
+            self.width = 350
+            self.height = 560
         self.root.geometry(f"{self.width}x{self.height}")
         self.canvas.config(width=self.width, height=self.height)
         self.save_config()
         self.draw_ui()
 
     def set_theme(self, key):
-        self.theme_key = key if key in THEMES else "pure_float"
+        self.theme_key = key if key in THEMES else "cyberpunk"
         self.save_config()
         self.draw_ui()
 
@@ -373,19 +411,19 @@ class TimeFlowWidget:
             rem = end_dt - now
             rem_h, rem_m, rem_s = rem.seconds // 3600, (rem.seconds % 3600) // 60, rem.seconds % 60
             badge = f"อีก {rem_h}ชม {rem_m}น" if rem_h > 0 else f"อีก {rem_m}น {rem_s}ว"
-            sub = f"เหลืออีก {rem_h} ชม. {rem_m} นาที (เลิกงาน {self.work_end_time})"
+            sub = f"เหลืออีก {rem_h} ชม. {rem_m} นาที (เลิกงาน {self.work_end_time}) 🏃💨"
 
             return {
-                "title": f"เลิกงาน {self.work_end_time}",
+                "title": f"เวลาเลิกงาน ({self.work_end_time})",
                 "badge": badge,
                 "sub": sub,
                 "pct": pct
             }
         else:
             return {
-                "title": f"เลิกงาน {self.work_end_time}",
+                "title": f"เวลาเลิกงาน ({self.work_end_time})",
                 "badge": "เลิกงานแล้ว 🎉",
-                "sub": "หมดเวลาทำงานแล้ว พักผ่อนให้สบายใจ",
+                "sub": "หมดเวลาทำงานแล้ว พักผ่อนให้สบายใจ ✨",
                 "pct": 100.0
             }
 
@@ -424,7 +462,7 @@ class TimeFlowWidget:
                 sub = f"เหลืออีก {days} วัน {hours} ชม. ({target_display})"
             else:
                 badge = f"D-0 ({hours}h {mins}m)"
-                sub = f"เหลืออีก {hours} ชม. {mins} นาที {secs} วิ!"
+                sub = f"เหลืออีก {hours} ชม. {mins} นาที {secs} วิ! 🔥"
         elif total_seconds >= -86400:
             badge = "D-Day! 🎉"
             sub = f"วันนี้คือวันสำคัญ! ({target_display})"
@@ -513,74 +551,80 @@ class TimeFlowWidget:
             # -------------------------------------------------------------
             # MINI CAPSULE
             # -------------------------------------------------------------
-            self.round_rect(4, 4, self.width - 4, self.height - 4, r=14, fill="#070b14", outline="#1e293b", width=1)
+            self.round_rect(4, 4, self.width - 4, self.height - 4, r=16, fill=t["bg"], outline=t["border"], width=1.5)
             
             self.canvas.create_text(16, self.height // 2, text="🎯", font=("Segoe UI Emoji", 10), anchor="w")
             
-            btn_prev = self.canvas.create_text(34, self.height // 2, text="◀", font=("Segoe UI", 7), fill=t["text_dim"])
+            btn_prev = self.canvas.create_text(34, self.height // 2, text="◀", font=("Segoe UI", 7), fill=t["text_sub"])
             self.canvas.tag_bind(btn_prev, "<Button-1>", lambda e: self.prev_event())
 
             title_txt = data['event']['title'][:8]
             self.canvas.create_text(48, self.height // 2, text=title_txt, font=("Segoe UI", 9, "bold"), fill=t["text_main"], anchor="w")
 
-            btn_next = self.canvas.create_text(112, self.height // 2, text="▶", font=("Segoe UI", 7), fill=t["text_dim"])
+            btn_next = self.canvas.create_text(112, self.height // 2, text="▶", font=("Segoe UI", 7), fill=t["text_sub"])
             self.canvas.tag_bind(btn_next, "<Button-1>", lambda e: self.next_event())
             
             # Micro-bar
-            bx1, by1, bx2, by2 = 126, (self.height // 2) - 2, 215, (self.height // 2) + 2
-            self.round_rect(bx1, by1, bx2, by2, r=2, fill="#1e293b")
+            bx1, by1, bx2, by2 = 126, (self.height // 2) - 3, 215, (self.height // 2) + 3
+            self.round_rect(bx1, by1, bx2, by2, r=3, fill=t["track"])
             fill_w = bx1 + (bx2 - bx1) * (data['event']['pct'] / 100.0)
             if fill_w > bx1 + 2:
-                self.round_rect(bx1, by1, fill_w, by2, r=2, fill=t["goal_bar"])
+                self.round_rect(bx1, by1, fill_w, by2, r=3, fill=t["goal_bar"])
 
             self.canvas.create_text(224, self.height // 2, text=data['event']['badge'], font=("Segoe UI", 8, "bold"), fill=t["goal_glow"], anchor="w")
             
-            btn_exp = self.canvas.create_text(self.width - 16, self.height // 2, text="➕", font=("Segoe UI", 9), fill=t["text_dim"])
+            btn_exp = self.canvas.create_text(self.width - 16, self.height // 2, text="➕", font=("Segoe UI", 9), fill=t["text_sub"])
             self.canvas.tag_bind(btn_exp, "<Button-1>", lambda e: self.toggle_mini())
             return
 
         # -----------------------------------------------------------------
-        # FULL VIEW: OPTION 4 TRUE MINIMALIST FLOATING TYPOGRAPHY
+        # FULL VIEW: SOLID HIGH-CONTRAST CARD WITH VIBRANT THEMES
         # -----------------------------------------------------------------
-        # If theme has a box (e.g. Glass Minimal, Clean White), draw background card
-        if t.get("has_box", False):
-            self.round_rect(4, 4, self.width - 4, self.height - 4, r=20, fill=t["bg"], outline=t["border"], width=1.2)
+        # Outer Sleek Solid Card with 1.5px border
+        self.round_rect(5, 5, self.width - 5, self.height - 5, r=22, fill=t["bg"], outline=t["border"], width=1.5)
 
-        # Micro Action Bar (Subtle & Clean)
-        btn_work = self.canvas.create_text(self.width - 110, 22, text="💼", font=("Segoe UI Emoji", 8), fill=t["text_dim"])
+        # Header Bar
+        self.canvas.create_text(20, 24, text="⏳", font=("Segoe UI Emoji", 10), anchor="w")
+        self.canvas.create_text(38, 24, text="TimeFlow", font=("Segoe UI", 10, "bold"), fill=t["text_main"], anchor="w")
+
+        # Subtle Header Actions
+        btn_work = self.canvas.create_text(self.width - 114, 24, text="💼", font=("Segoe UI Emoji", 8), fill=t["text_sub"])
         self.canvas.tag_bind(btn_work, "<Button-1>", lambda e: self.open_work_dialog())
 
-        pin_color = t["accent"] if self.is_pinned else t["text_dim"]
-        btn_pin = self.canvas.create_text(self.width - 88, 22, text="📌", font=("Segoe UI Emoji", 8), fill=pin_color)
+        pin_color = t["accent"] if self.is_pinned else t["text_sub"]
+        btn_pin = self.canvas.create_text(self.width - 92, 24, text="📌", font=("Segoe UI Emoji", 8), fill=pin_color)
         self.canvas.tag_bind(btn_pin, "<Button-1>", lambda e: self.toggle_pin())
 
-        btn_mini = self.canvas.create_text(self.width - 66, 22, text="➖", font=("Segoe UI", 9), fill=t["text_dim"])
+        btn_mini = self.canvas.create_text(self.width - 70, 24, text="➖", font=("Segoe UI", 9), fill=t["text_sub"])
         self.canvas.tag_bind(btn_mini, "<Button-1>", lambda e: self.toggle_mini())
 
-        btn_th = self.canvas.create_text(self.width - 44, 22, text="🎨", font=("Segoe UI Emoji", 8), fill=t["text_dim"])
+        btn_th = self.canvas.create_text(self.width - 48, 24, text="🎨", font=("Segoe UI Emoji", 8), fill=t["text_sub"])
         self.canvas.tag_bind(btn_th, "<Button-1>", lambda e: self.next_theme())
 
-        btn_cl = self.canvas.create_text(self.width - 22, 22, text="✕", font=("Segoe UI", 9), fill=t["text_dim"])
+        btn_cl = self.canvas.create_text(self.width - 24, 24, text="✕", font=("Segoe UI", 9), fill=t["text_sub"])
         self.canvas.tag_bind(btn_cl, "<Button-1>", lambda e: self.close())
 
-        # 1. Big Hero Clock & Minimal Uppercase Date (Floating on Wallpaper!)
-        self.time_label_id = self.canvas.create_text(18, 54, text=data["time_str"], font=("Segoe UI", 28, "bold"), fill=t["text_main"], anchor="w")
-        self.date_label_id = self.canvas.create_text(18, 86, text=data["date_en"], font=("Segoe UI", 8, "bold"), fill=t["text_muted"], anchor="w")
+        # 1. Big Hero Clock & Minimal Date
+        self.time_label_id = self.canvas.create_text(20, 60, text=data["time_str"], font=("Segoe UI", 28, "bold"), fill=t["text_main"], anchor="w")
+        self.date_label_id = self.canvas.create_text(20, 92, text=data["date_th"], font=("Segoe UI", 9), fill=t["text_sub"], anchor="w")
 
-        # 2. Typography Micro-Progress Tracks (3px micro-lines)
-        y_cursor = 120
-        line_gap = 60
+        # Divider line
+        self.canvas.create_line(20, 110, self.width - 20, 110, fill=t.get("border_subtle", t["track"]), width=1)
+
+        # 2. Typography Micro-Progress Tracks (Perfect Spacing, No Overlaps)
+        y_cursor = 130
+        line_gap = 62
 
         # Item 1: TARGET (Custom Multiple Goals)
-        self.draw_pure_row(
+        self.draw_clean_row(
             y=y_cursor,
-            tag="TARGET",
-            tag_color=t["goal_glow"],
+            emoji="🎯",
             title=data['event']['title'],
             badge=data['event']['badge'],
             sub=data['event']['sub'],
             pct=data['event']['pct'],
             bar_color=t["goal_bar"],
+            badge_color=t["goal_glow"],
             is_event=True,
             data=data,
             theme=t
@@ -589,15 +633,15 @@ class TimeFlowWidget:
 
         # Item 2: WORK (Off-Work Countdown)
         if self.work_enabled:
-            self.draw_pure_row(
+            self.draw_clean_row(
                 y=y_cursor,
-                tag="WORK",
-                tag_color=t["work_glow"],
+                emoji="💼",
                 title=data['work']['title'],
                 badge=data['work']['badge'],
                 sub=data['work']['sub'],
                 pct=data['work']['pct'],
                 bar_color=t["work_bar"],
+                badge_color=t["work_glow"],
                 is_work=True,
                 data=data,
                 theme=t
@@ -605,93 +649,92 @@ class TimeFlowWidget:
             y_cursor += line_gap
 
         # Item 3: YEAR 2026
-        self.draw_pure_row(
+        self.draw_clean_row(
             y=y_cursor,
-            tag="YEAR",
-            tag_color=t["year_bar"],
+            emoji="🌍",
             title=f"ปี {data['year']}",
             badge=f"{data['year_pct']:.1f}%",
             sub=f"เหลืออีก {data['year_days_left']} วันในปีนี้",
             pct=data['year_pct'],
             bar_color=t["year_bar"],
+            badge_color=t["year_bar"],
             theme=t
         )
         y_cursor += line_gap
 
         # Item 4: MONTH
-        self.draw_pure_row(
+        self.draw_clean_row(
             y=y_cursor,
-            tag="MONTH",
-            tag_color=t["month_bar"],
+            emoji="🗓️",
             title=f"เดือน{data['month_name']}",
             badge=f"{data['month_pct']:.1f}%",
             sub=f"เหลืออีก {data['month_days_left']} วันในเดือนนี้",
             pct=data['month_pct'],
             bar_color=t["month_bar"],
+            badge_color=t["month_bar"],
             theme=t
         )
         y_cursor += line_gap
 
         # Item 5: TODAY
-        self.draw_pure_row(
+        self.draw_clean_row(
             y=y_cursor,
-            tag="TODAY",
-            tag_color=t["day_bar"],
+            emoji="☀️",
             title="วันนี้ (Today)",
             badge=f"{data['day_pct']:.1f}%",
             sub=f"เหลืออีก {data['day_hours']} ชม. {data['day_mins']} นาที",
             pct=data['day_pct'],
             bar_color=t["day_bar"],
+            badge_color=t["day_bar"],
             theme=t
         )
 
-        # Subtle bottom caption
-        self.canvas.create_text(self.width // 2, self.height - 18, text="เวลาคือสิ่งเดียวที่ผ่านไปแล้วไม่ย้อนกลับ ✨", font=("Segoe UI", 7), fill=t["text_dim"])
+        # Bottom minimal quote
+        self.canvas.create_text(self.width // 2, self.height - 22, text="เวลาคือสิ่งเดียวที่ผ่านไปแล้วไม่ย้อนกลับ ✨", font=("Segoe UI", 8), fill=t["text_sub"])
 
-    def draw_pure_row(self, y, tag, tag_color, title, badge, sub, pct, bar_color, theme, is_event=False, is_work=False, data=None):
-        x1 = 18
-        x2 = self.width - 18
+    def draw_clean_row(self, y, emoji, title, badge, sub, pct, bar_color, badge_color, theme, is_event=False, is_work=False, data=None):
+        x1 = 20
+        x2 = self.width - 20
 
-        # Tag (e.g. TARGET, WORK, YEAR) with proper spacing
-        self.canvas.create_text(x1, y, text=tag, font=("Segoe UI", 7, "bold"), fill=tag_color, anchor="w")
+        # Emoji Icon
+        t_icon = self.canvas.create_text(x1, y, text=emoji, font=("Segoe UI Emoji", 10), anchor="w")
 
-        # Title (Positioned after tag with plenty of space)
-        title_x = x1 + 48
-        t_label = self.canvas.create_text(title_x, y, text=title, font=("Segoe UI", 8, "bold"), fill=theme["text_main"], anchor="w")
+        # Title (Positioned with proper margin)
+        t_title = self.canvas.create_text(x1 + 22, y, text=title, font=("Segoe UI", 9, "bold"), fill=theme["text_main"], anchor="w")
 
-        # Event Switcher (e.g. ◀ 1/3 ▶)
+        # Event Switcher Arrows (e.g. ◀ 1/3 ▶)
         if is_event and data and data['total_events'] > 1:
-            btn_prev = self.canvas.create_text(x2 - 110, y, text="◀", font=("Segoe UI", 7), fill=theme["text_dim"])
+            btn_prev = self.canvas.create_text(x2 - 120, y, text="◀", font=("Segoe UI", 8), fill=theme["text_sub"])
             self.canvas.tag_bind(btn_prev, "<Button-1>", lambda e: self.prev_event())
 
-            self.canvas.create_text(x2 - 98, y, text=f"{data['event_num']}/{data['total_events']}", font=("Segoe UI", 7), fill=theme["text_dim"])
+            self.canvas.create_text(x2 - 106, y, text=f"{data['event_num']}/{data['total_events']}", font=("Segoe UI", 7), fill=theme["text_sub"])
 
-            btn_next = self.canvas.create_text(x2 - 86, y, text="▶", font=("Segoe UI", 7), fill=theme["text_dim"])
+            btn_next = self.canvas.create_text(x2 - 92, y, text="▶", font=("Segoe UI", 8), fill=theme["text_sub"])
             self.canvas.tag_bind(btn_next, "<Button-1>", lambda e: self.next_event())
 
-        # Badge Value (Right-aligned, bold)
-        badge_id = self.canvas.create_text(x2, y, text=badge, font=("Segoe UI", 8, "bold"), fill=tag_color, anchor="e")
+        # Badge (Right-aligned, bold accent)
+        badge_id = self.canvas.create_text(x2, y, text=badge, font=("Segoe UI", 9, "bold"), fill=badge_color, anchor="e")
 
-        # 3px Micro-Track Line (Floating on wallpaper with dark track background)
-        by = y + 13
-        self.round_rect(x1, by, x2, by + 3, r=1.5, fill=theme["track"])
+        # Micro-Track Line (Height 4px with clean smooth rounded ends)
+        by = y + 14
+        self.round_rect(x1, by, x2, by + 4, r=2, fill=theme["track"])
         fill_w = x1 + (x2 - x1) * (pct / 100.0)
         if fill_w > x1 + 2:
-            self.round_rect(x1, by, fill_w, by + 3, r=1.5, fill=bar_color)
+            self.round_rect(x1, by, fill_w, by + 4, r=2, fill=bar_color)
 
-        # Micro Subtitle
-        sub_id = self.canvas.create_text(x1, y + 26, text=sub, font=("Segoe UI", 7), fill=theme["text_dim"], anchor="w")
+        # Subtitle Text (Under track line)
+        sub_id = self.canvas.create_text(x1, y + 28, text=sub, font=("Segoe UI", 7.5), fill=theme["text_sub"], anchor="w")
 
         # Event bindings
         if is_event:
             self.event_badge_id = badge_id
             self.event_sub_id = sub_id
-            for elem in [t_label, badge_id, sub_id]:
+            for elem in [t_icon, t_title, badge_id, sub_id]:
                 self.canvas.tag_bind(elem, "<Button-1>", lambda e: self.open_event_manager())
         elif is_work:
             self.work_badge_id = badge_id
             self.work_sub_id = sub_id
-            for elem in [t_label, badge_id, sub_id]:
+            for elem in [t_icon, t_title, badge_id, sub_id]:
                 self.canvas.tag_bind(elem, "<Button-1>", lambda e: self.open_work_dialog())
 
     # ---------------------------------------------------------------------
@@ -704,22 +747,23 @@ class TimeFlowWidget:
         dialog.resizable(False, False)
         dialog.attributes("-topmost", True)
 
-        dialog.config(bg="#0c1322")
+        t = self.get_theme()
+        dialog.config(bg=t["bg"])
 
-        lbl_head = tk.Label(dialog, text="💼 ตั้งค่าเวลานับถอยหลังเลิกงาน", font=("Segoe UI", 10, "bold"), bg="#0c1322", fg="#f8fafc")
+        lbl_head = tk.Label(dialog, text="💼 ตั้งค่าเวลานับถอยหลังเลิกงาน", font=("Segoe UI", 10, "bold"), bg=t["bg"], fg=t["text_main"])
         lbl_head.pack(anchor="w", padx=20, pady=(16, 10))
 
-        lbl_start = tk.Label(dialog, text="เวลาเริ่มงาน (HH:MM เช่น 08:30):", bg="#0c1322", fg="#f8fafc", font=("Segoe UI", 8, "bold"))
+        lbl_start = tk.Label(dialog, text="เวลาเริ่มงาน (HH:MM เช่น 08:30):", bg=t["bg"], fg=t["text_main"], font=("Segoe UI", 8, "bold"))
         lbl_start.pack(anchor="w", padx=20, pady=(0, 2))
 
-        entry_start = tk.Entry(dialog, font=("Segoe UI", 10), bg="#162033", fg="#ffffff", insertbackground="#ffffff", relief="flat")
+        entry_start = tk.Entry(dialog, font=("Segoe UI", 10), bg=t["card_bg"], fg=t["text_main"], insertbackground=t["text_main"], relief="flat")
         entry_start.insert(0, self.work_start_time)
         entry_start.pack(fill="x", padx=20, pady=(0, 8), ipady=3)
 
-        lbl_end = tk.Label(dialog, text="เวลาเลิกงาน (HH:MM เช่น 17:30):", bg="#0c1322", fg="#f8fafc", font=("Segoe UI", 8, "bold"))
+        lbl_end = tk.Label(dialog, text="เวลาเลิกงาน (HH:MM เช่น 17:30):", bg=t["bg"], fg=t["text_main"], font=("Segoe UI", 8, "bold"))
         lbl_end.pack(anchor="w", padx=20, pady=(0, 2))
 
-        entry_end = tk.Entry(dialog, font=("Segoe UI", 10), bg="#162033", fg="#ffffff", insertbackground="#ffffff", relief="flat")
+        entry_end = tk.Entry(dialog, font=("Segoe UI", 10), bg=t["card_bg"], fg=t["text_main"], insertbackground=t["text_main"], relief="flat")
         entry_end.insert(0, self.work_end_time)
         entry_end.pack(fill="x", padx=20, pady=(0, 14), ipady=3)
 
@@ -737,7 +781,7 @@ class TimeFlowWidget:
             except ValueError:
                 msgbox.showerror("รูปแบบเวลาไม่ถูกต้อง", "กรุณาใส่เวลาในรูปแบบ ชั่วโมง:นาที\nเช่น 08:30 หรือ 17:30", parent=dialog)
 
-        btn_save = tk.Button(dialog, text="บันทึกเวลาทำงาน 💾", bg="#f59e0b", fg="#ffffff", font=("Segoe UI", 9, "bold"), relief="flat", command=on_save, cursor="hand2")
+        btn_save = tk.Button(dialog, text="บันทึกเวลาทำงาน 💾", bg=t["work_bar"], fg="#000000" if self.theme_key == "cyberpunk" else "#ffffff", font=("Segoe UI", 9, "bold"), relief="flat", command=on_save, cursor="hand2")
         btn_save.pack(fill="x", padx=20, ipady=4)
 
     # ---------------------------------------------------------------------
@@ -750,20 +794,21 @@ class TimeFlowWidget:
         dialog.resizable(False, False)
         dialog.attributes("-topmost", True)
 
-        dialog.config(bg="#0c1322")
+        t = self.get_theme()
+        dialog.config(bg=t["bg"])
 
-        head_frame = tk.Frame(dialog, bg="#0c1322")
+        head_frame = tk.Frame(dialog, bg=t["bg"])
         head_frame.pack(fill="x", padx=16, pady=(14, 8))
 
-        lbl_head = tk.Label(head_frame, text="🎯 รายการเป้าหมาย & Events", font=("Segoe UI", 11, "bold"), bg="#0c1322", fg="#ffffff")
+        lbl_head = tk.Label(head_frame, text="🎯 รายการเป้าหมาย & Events", font=("Segoe UI", 11, "bold"), bg=t["bg"], fg=t["text_main"])
         lbl_head.pack(side="left")
 
-        btn_new = tk.Button(head_frame, text="➕ เพิ่ม Event", bg="#a855f7", fg="#ffffff", font=("Segoe UI", 8, "bold"), relief="flat", cursor="hand2", command=lambda: [dialog.destroy(), self.open_add_event_dialog()])
+        btn_new = tk.Button(head_frame, text="➕ เพิ่ม Event", bg=t["goal_bar"], fg="#ffffff", font=("Segoe UI", 8, "bold"), relief="flat", cursor="hand2", command=lambda: [dialog.destroy(), self.open_add_event_dialog()])
         btn_new.pack(side="right")
 
-        list_canvas = tk.Canvas(dialog, bg="#0c1322", highlightthickness=0)
+        list_canvas = tk.Canvas(dialog, bg=t["bg"], highlightthickness=0)
         scrollbar = tk.Scrollbar(dialog, orient="vertical", command=list_canvas.yview)
-        scroll_frame = tk.Frame(list_canvas, bg="#0c1322")
+        scroll_frame = tk.Frame(list_canvas, bg=t["bg"])
 
         scroll_frame.bind(
             "<Configure>",
@@ -777,29 +822,29 @@ class TimeFlowWidget:
         scrollbar.pack(side="right", fill="y", padx=(0, 6), pady=6)
 
         if not self.events:
-            lbl_empty = tk.Label(scroll_frame, text="ยังไม่มี Event ในรายการ\nกดปุ่ม '+ เพิ่ม Event' เพื่อเริ่มต้น", font=("Segoe UI", 9), bg="#0c1322", fg="#94a3b8", pady=40)
+            lbl_empty = tk.Label(scroll_frame, text="ยังไม่มี Event ในรายการ\nกดปุ่ม '+ เพิ่ม Event' เพื่อเริ่มต้น", font=("Segoe UI", 9), bg=t["bg"], fg=t["text_sub"], pady=40)
             lbl_empty.pack(fill="x")
 
         for idx, ev in enumerate(self.events):
             ev_calc = self.calculate_event_countdown(ev)
             is_active = (idx == self.event_idx)
 
-            card = tk.Frame(scroll_frame, bg="#162033", highlightbackground="#a855f7" if is_active else "#1e293b", highlightthickness=1)
+            card = tk.Frame(scroll_frame, bg=t["card_bg"], highlightbackground=t["goal_bar"] if is_active else t["border"], highlightthickness=1)
             card.pack(fill="x", padx=8, pady=4, ipady=4)
 
-            top_row = tk.Frame(card, bg="#162033")
+            top_row = tk.Frame(card, bg=t["card_bg"])
             top_row.pack(fill="x", padx=8, pady=(4, 2))
 
-            lbl_title = tk.Label(top_row, text=f"{'⭐ ' if is_active else ''}{ev['title']}", font=("Segoe UI", 9, "bold"), bg="#162033", fg="#ffffff")
+            lbl_title = tk.Label(top_row, text=f"{'⭐ ' if is_active else ''}{ev['title']}", font=("Segoe UI", 9, "bold"), bg=t["card_bg"], fg=t["text_main"])
             lbl_title.pack(side="left")
 
-            lbl_badge = tk.Label(top_row, text=ev_calc['badge'], font=("Segoe UI", 8, "bold"), bg="#162033", fg="#c084fc")
+            lbl_badge = tk.Label(top_row, text=ev_calc['badge'], font=("Segoe UI", 8, "bold"), bg=t["card_bg"], fg=t["goal_glow"])
             lbl_badge.pack(side="right")
 
-            lbl_sub = tk.Label(card, text=ev_calc['sub'], font=("Segoe UI", 7), bg="#162033", fg="#94a3b8", anchor="w")
+            lbl_sub = tk.Label(card, text=ev_calc['sub'], font=("Segoe UI", 7), bg=t["card_bg"], fg=t["text_sub"], anchor="w")
             lbl_sub.pack(fill="x", padx=8, pady=(0, 4))
 
-            btn_row = tk.Frame(card, bg="#162033")
+            btn_row = tk.Frame(card, bg=t["card_bg"])
             btn_row.pack(fill="x", padx=8, pady=(2, 2))
 
             def make_select_cmd(i):
@@ -812,13 +857,13 @@ class TimeFlowWidget:
                 return lambda: self.delete_event(i, dialog)
 
             if not is_active:
-                btn_sel = tk.Button(btn_row, text="เลือกแสดงบนหน้าจอ", font=("Segoe UI", 7), bg="#1e293b", fg="#ffffff", relief="flat", cursor="hand2", command=make_select_cmd(idx))
+                btn_sel = tk.Button(btn_row, text="เลือกแสดงบนหน้าจอ", font=("Segoe UI", 7), bg=t["track"], fg=t["text_main"], relief="flat", cursor="hand2", command=make_select_cmd(idx))
                 btn_sel.pack(side="left", padx=(0, 4))
 
-            btn_edit = tk.Button(btn_row, text="✏️ แก้ไข", font=("Segoe UI", 7), bg="#1e293b", fg="#ffffff", relief="flat", cursor="hand2", command=make_edit_cmd(idx))
+            btn_edit = tk.Button(btn_row, text="✏️ แก้ไข", font=("Segoe UI", 7), bg=t["track"], fg=t["text_main"], relief="flat", cursor="hand2", command=make_edit_cmd(idx))
             btn_edit.pack(side="left", padx=4)
 
-            btn_del = tk.Button(btn_row, text="🗑️ ลบ", font=("Segoe UI", 7), bg="#1e293b", fg="#f87171", relief="flat", cursor="hand2", command=make_del_cmd(idx))
+            btn_del = tk.Button(btn_row, text="🗑️ ลบ", font=("Segoe UI", 7), bg=t["track"], fg="#f87171", relief="flat", cursor="hand2", command=make_del_cmd(idx))
             btn_del.pack(side="right", padx=4)
 
     def delete_event(self, idx, parent_dialog):
@@ -850,19 +895,20 @@ class TimeFlowWidget:
         dialog.resizable(False, False)
         dialog.attributes("-topmost", True)
 
-        dialog.config(bg="#0c1322")
+        t = self.get_theme()
+        dialog.config(bg=t["bg"])
 
-        lbl_title = tk.Label(dialog, text="ชื่อ Event / เป้าหมาย:", bg="#0c1322", fg="#ffffff", font=("Segoe UI", 9, "bold"))
+        lbl_title = tk.Label(dialog, text="ชื่อ Event / เป้าหมาย:", bg=t["bg"], fg=t["text_main"], font=("Segoe UI", 9, "bold"))
         lbl_title.pack(anchor="w", padx=20, pady=(16, 4))
 
-        entry_title = tk.Entry(dialog, font=("Segoe UI", 10), bg="#162033", fg="#ffffff", insertbackground="#ffffff", relief="flat")
+        entry_title = tk.Entry(dialog, font=("Segoe UI", 10), bg=t["card_bg"], fg=t["text_main"], insertbackground=t["text_main"], relief="flat")
         entry_title.insert(0, current_data.get("title", ""))
         entry_title.pack(fill="x", padx=20, pady=(0, 10), ipady=4)
 
-        lbl_date = tk.Label(dialog, text="วัน/เวลาเป้าหมาย (YYYY-MM-DD หรือ YYYY-MM-DD HH:MM):", bg="#0c1322", fg="#ffffff", font=("Segoe UI", 8, "bold"))
+        lbl_date = tk.Label(dialog, text="วัน/เวลาเป้าหมาย (YYYY-MM-DD หรือ YYYY-MM-DD HH:MM):", bg=t["bg"], fg=t["text_main"], font=("Segoe UI", 8, "bold"))
         lbl_date.pack(anchor="w", padx=20, pady=(0, 4))
 
-        entry_date = tk.Entry(dialog, font=("Segoe UI", 10), bg="#162033", fg="#ffffff", insertbackground="#ffffff", relief="flat")
+        entry_date = tk.Entry(dialog, font=("Segoe UI", 10), bg=t["card_bg"], fg=t["text_main"], insertbackground=t["text_main"], relief="flat")
         entry_date.insert(0, current_data.get("date", ""))
         entry_date.pack(fill="x", padx=20, pady=(0, 16), ipady=4)
 
@@ -894,7 +940,7 @@ class TimeFlowWidget:
             self.draw_ui()
             dialog.destroy()
 
-        btn_save = tk.Button(dialog, text="บันทึก Event 💾", bg="#a855f7", fg="#ffffff", font=("Segoe UI", 9, "bold"), relief="flat", command=on_save, cursor="hand2")
+        btn_save = tk.Button(dialog, text="บันทึก Event 💾", bg=t["goal_bar"], fg="#ffffff", font=("Segoe UI", 9, "bold"), relief="flat", command=on_save, cursor="hand2")
         btn_save.pack(fill="x", padx=20, ipady=5)
 
     def update_loop(self):
@@ -903,7 +949,7 @@ class TimeFlowWidget:
         # Live clock update
         if hasattr(self, 'time_label_id') and not self.is_mini:
             self.canvas.itemconfig(self.time_label_id, text=data["time_str"])
-            self.canvas.itemconfig(self.date_label_id, text=data["date_en"])
+            self.canvas.itemconfig(self.date_label_id, text=data["date_th"])
 
         # Live event countdown
         if hasattr(self, 'event_badge_id') and not self.is_mini:
