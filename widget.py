@@ -1,7 +1,9 @@
 """
 TimeFlow - Ultra-Minimalist & Crystal-Clear Floating Desktop Widget
-Supports Multiple Events/Milestones with Live Hourly/Minute Countdown,
-High-DPI crisp rendering, transparent glassmorphism, and minimal breathable UI.
+Supports:
+1. Multiple Events/Milestones with Live Hourly/Minute Countdown
+2. Workday & Off-Work Real-Time Countdown (เช่น จันทร์-ศุกร์ นับถอยหลังเลิกงาน 17:30)
+3. High-DPI crisp rendering, transparent borderless glassmorphism, and minimal breathable UI.
 """
 
 import ctypes
@@ -34,6 +36,8 @@ THEMES = {
         "text_muted": "#818cf8",
         "text_sub": "#64748b",
         "track": "#1e293b",
+        "work_bar": "#f59e0b",
+        "work_glow": "#fbbf24",
         "year_bar": "#38bdf8",
         "month_bar": "#34d399",
         "week_bar": "#fbbf24",
@@ -52,6 +56,8 @@ THEMES = {
         "text_muted": "#4f46e5",
         "text_sub": "#94a3b8",
         "track": "#e2e8f0",
+        "work_bar": "#d97706",
+        "work_glow": "#b45309",
         "year_bar": "#0284c7",
         "month_bar": "#059669",
         "week_bar": "#d97706",
@@ -70,6 +76,8 @@ THEMES = {
         "text_muted": "#86efac",
         "text_sub": "#4ade80",
         "track": "#1b3a2a",
+        "work_bar": "#eab308",
+        "work_glow": "#facc15",
         "year_bar": "#4ade80",
         "month_bar": "#22c55e",
         "week_bar": "#facc15",
@@ -88,6 +96,8 @@ THEMES = {
         "text_muted": "#c084fc",
         "text_sub": "#818cf8",
         "track": "#271448",
+        "work_bar": "#06b6d4",
+        "work_glow": "#22d3ee",
         "year_bar": "#c084fc",
         "month_bar": "#22d3ee",
         "week_bar": "#f472b6",
@@ -123,7 +133,7 @@ class TimeFlowWidget:
 
         # Dimensions: Clean, sleek, non-cluttered
         self.width = 340
-        self.height = 550
+        self.height = 610
         self.root.geometry(f"{self.width}x{self.height}+{self.pos_x}+{self.pos_y}")
 
         # Dragging coordinates
@@ -174,6 +184,12 @@ class TimeFlowWidget:
             }
         ]
 
+        # Work / Off-Work Shift Settings (Default: Mon-Fri, 08:30 - 17:30)
+        self.work_enabled = True
+        self.work_start_time = "08:30"
+        self.work_end_time = "17:30"
+        self.work_days = [0, 1, 2, 3, 4] # 0 = Mon, 4 = Fri
+
         if os.path.exists(CONFIG_FILE):
             try:
                 with open(CONFIG_FILE, 'r', encoding='utf-8') as f:
@@ -188,14 +204,11 @@ class TimeFlowWidget:
                     saved_events = data.get('events', [])
                     if saved_events and isinstance(saved_events, list):
                         self.events = saved_events
-                    elif 'goal_title' in data and 'goal_date' in data:
-                        # Migrate old single goal
-                        self.events = [{
-                            "id": "1",
-                            "title": data.get('goal_title', 'เป้าหมายสำคัญ'),
-                            "date": data.get('goal_date', '2026-12-24') + " 00:00",
-                            "start_date": data.get('goal_start_date', '2026-01-01')
-                        }]
+
+                    self.work_enabled = data.get('work_enabled', True)
+                    self.work_start_time = data.get('work_start_time', '08:30')
+                    self.work_end_time = data.get('work_end_time', '17:30')
+                    self.work_days = data.get('work_days', [0, 1, 2, 3, 4])
             except Exception:
                 pass
 
@@ -210,7 +223,11 @@ class TimeFlowWidget:
             'pinned': self.is_pinned,
             'mini': self.is_mini,
             'event_idx': self.event_idx,
-            'events': self.events
+            'events': self.events,
+            'work_enabled': self.work_enabled,
+            'work_start_time': self.work_start_time,
+            'work_end_time': self.work_end_time,
+            'work_days': self.work_days
         }
         try:
             with open(CONFIG_FILE, 'w', encoding='utf-8') as f:
@@ -225,6 +242,7 @@ class TimeFlowWidget:
 
         # Context Menu
         self.menu = tk.Menu(self.root, tearoff=0)
+        self.menu.add_command(label="💼 ตั้งค่าเวลาเลิกงาน (Set Work Hours)", command=self.open_work_dialog)
         self.menu.add_command(label="🎯 จัดการ Events ทั้งหมด (Manage Events)", command=self.open_event_manager)
         self.menu.add_command(label="➕ เพิ่ม Event ใหม่ (Add New Event)", command=self.open_add_event_dialog)
         self.menu.add_separator()
@@ -272,7 +290,7 @@ class TimeFlowWidget:
             self.height = 58
         else:
             self.width = 340
-            self.height = 550
+            self.height = 610
         self.root.geometry(f"{self.width}x{self.height}")
         self.canvas.config(width=self.width, height=self.height)
         self.save_config()
@@ -315,6 +333,72 @@ class TimeFlowWidget:
                 pass
         return None
 
+    def calculate_work_countdown(self, now):
+        weekday = now.weekday() # 0 = Mon, 4 = Fri, 5 = Sat, 6 = Sun
+        
+        # Check if today is a work day
+        if weekday not in self.work_days:
+            return {
+                "title": "เวลาทำงาน / เลิกงาน",
+                "badge": "วันหยุด 🏖️",
+                "sub": "วันนี้เป็นวันหยุดสุดสัปดาห์ พักผ่อนให้เต็มที่!",
+                "pct": 100.0,
+                "is_active_work": False
+            }
+
+        try:
+            sh, sm = map(int, self.work_start_time.split(':'))
+            eh, em = map(int, self.work_end_time.split(':'))
+        except Exception:
+            sh, sm = 8, 30
+            eh, em = 17, 30
+
+        start_dt = now.replace(hour=sh, minute=sm, second=0, microsecond=0)
+        end_dt = now.replace(hour=eh, minute=em, second=0, microsecond=0)
+
+        if now < start_dt:
+            # Before work
+            diff = start_dt - now
+            h = diff.seconds // 3600
+            m = (diff.seconds % 3600) // 60
+            return {
+                "title": f"เวลาทำงาน ({self.work_start_time} - {self.work_end_time})",
+                "badge": f"เริ่มงาน {self.work_start_time}",
+                "sub": f"เริ่มงานในอีก {h} ชม. {m} นาที",
+                "pct": 0.0,
+                "is_active_work": False
+            }
+        elif now <= end_dt:
+            # During work -> Counting down to OFF-WORK!
+            total_work_sec = (end_dt - start_dt).total_seconds()
+            passed_work_sec = (now - start_dt).total_seconds()
+            pct = (passed_work_sec / total_work_sec) * 100 if total_work_sec > 0 else 0.0
+
+            rem = end_dt - now
+            rem_h = rem.seconds // 3600
+            rem_m = (rem.seconds % 3600) // 60
+            rem_s = rem.seconds % 60
+
+            badge = f"อีก {rem_h} ชม. {rem_m} น." if rem_h > 0 else f"อีก {rem_m} นาที {rem_s} วิ"
+            sub = f"เหลืออีก {rem_h} ชม. {rem_m} นาทีจะเลิกงาน ({self.work_end_time}) 🏃💨"
+
+            return {
+                "title": f"เวลาเลิกงาน ({self.work_end_time})",
+                "badge": badge,
+                "sub": sub,
+                "pct": pct,
+                "is_active_work": True
+            }
+        else:
+            # After work
+            return {
+                "title": f"เวลาเลิกงาน ({self.work_end_time})",
+                "badge": "เลิกงานแล้ว 🎉",
+                "sub": f"หมดเวลาทำงานแล้ว พักผ่อนให้สบายใจ ✨",
+                "pct": 100.0,
+                "is_active_work": False
+            }
+
     def calculate_event_countdown(self, event_item):
         now = datetime.datetime.now()
         dt_str = event_item.get("date", "")
@@ -331,7 +415,6 @@ class TimeFlowWidget:
         diff = target_dt - now
         total_seconds = int(diff.total_seconds())
 
-        # Progress from start_date
         start_str = event_item.get("start_date", "")
         start_dt = self.parse_datetime(start_str) or (target_dt - datetime.timedelta(days=30))
         total_time_span = (target_dt - start_dt).total_seconds()
@@ -354,7 +437,6 @@ class TimeFlowWidget:
                 badge = f"D-{days} ({hours} ชม.)"
                 sub = f"เหลืออีก {days} วัน {hours} ชม. {mins} นาที ({target_display})"
             else:
-                # Less than 24 hours (Ultra precise!)
                 badge = f"D-0 ({hours}h {mins}m)"
                 sub = f"เหลืออีก {hours} ชม. {mins} นาที {secs} วิ! 🔥"
         elif total_seconds >= -86400:
@@ -420,6 +502,9 @@ class TimeFlowWidget:
                 "pct": 0.0
             }
 
+        # Workday & Off-Work Countdown
+        work_data = self.calculate_work_countdown(now)
+
         return {
             "now": now,
             "year": year,
@@ -434,6 +519,7 @@ class TimeFlowWidget:
             "day_hours": day_hours,
             "day_mins": day_mins,
             "event": event_data,
+            "work": work_data,
             "total_events": len(self.events),
             "event_num": self.event_idx + 1,
             "time_str": now.strftime("%H:%M:%S"),
@@ -447,11 +533,10 @@ class TimeFlowWidget:
 
         if self.is_mini:
             # -------------------------------------------------------------
-            # MINI CAPSULE VIEW (Clean & Minimal with Hourly Countdown)
+            # MINI CAPSULE VIEW
             # -------------------------------------------------------------
             self.round_rect(4, 4, self.width - 4, self.height - 4, r=16, fill=t["bg"], outline=t["border"], width=1.2)
             
-            # Left icon & switcher
             self.canvas.create_text(16, self.height // 2, text="🎯", font=("Segoe UI Emoji", 10), anchor="w")
             btn_prev = self.canvas.create_text(32, self.height // 2, text="◀", font=("Segoe UI", 7), fill=t["text_sub"])
             self.canvas.tag_bind(btn_prev, "<Button-1>", lambda e: self.prev_event())
@@ -462,17 +547,14 @@ class TimeFlowWidget:
             btn_next = self.canvas.create_text(105, self.height // 2, text="▶", font=("Segoe UI", 7), fill=t["text_sub"])
             self.canvas.tag_bind(btn_next, "<Button-1>", lambda e: self.next_event())
             
-            # Bar
             bx1, by1, bx2, by2 = 120, (self.height // 2) - 3, 210, (self.height // 2) + 3
             self.round_rect(bx1, by1, bx2, by2, r=3, fill=t["track"])
             fill_w = bx1 + (bx2 - bx1) * (data['event']['pct'] / 100.0)
             if fill_w > bx1 + 3:
                 self.round_rect(bx1, by1, fill_w, by2, r=3, fill=t["goal_bar"])
 
-            # Badge
             self.canvas.create_text(218, self.height // 2, text=data['event']['badge'], font=("Segoe UI", 8, "bold"), fill=t["goal_glow"], anchor="w")
             
-            # Expand btn
             btn_exp = self.canvas.create_text(self.width - 16, self.height // 2, text="➕", font=("Segoe UI", 10), fill=t["text_sub"])
             self.canvas.tag_bind(btn_exp, "<Button-1>", lambda e: self.toggle_mini())
             return
@@ -480,14 +562,16 @@ class TimeFlowWidget:
         # -----------------------------------------------------------------
         # FULL CARD VIEW (Clean, Breathable, Minimalist)
         # -----------------------------------------------------------------
-        # Outer Card
         self.round_rect(5, 5, self.width - 5, self.height - 5, r=24, fill=t["bg"], outline=t["border"], width=1.5)
 
-        # Header Bar: Brand + Clean Action Icons
+        # Header Bar
         self.canvas.create_text(24, 26, text="⏳", font=("Segoe UI Emoji", 12), anchor="w")
         self.canvas.create_text(46, 26, text="TimeFlow", font=("Segoe UI", 11, "bold"), fill=t["text_main"], anchor="w")
 
-        # Header Buttons
+        # Header Actions
+        btn_work = self.canvas.create_text(self.width - 136, 26, text="💼", font=("Segoe UI Emoji", 9), fill=t["text_sub"])
+        self.canvas.tag_bind(btn_work, "<Button-1>", lambda e: self.open_work_dialog())
+
         btn_add = self.canvas.create_text(self.width - 114, 26, text="➕", font=("Segoe UI", 9), fill=t["text_sub"])
         self.canvas.tag_bind(btn_add, "<Button-1>", lambda e: self.open_add_event_dialog())
 
@@ -511,16 +595,23 @@ class TimeFlowWidget:
         # 2. Sleek Multi-Event Highlight Card with Hourly Countdown
         self.draw_event_card(y=114, data=data, theme=t)
 
-        # 3. Unified Time Progress Rows
-        self.draw_progress_row(y=196, emoji="🌍", title=f"ปี {data['year']}", pct=data['year_pct'], sub=f"เหลืออีก {data['year_days_left']} วัน", bar_color=t["year_bar"], theme=t)
-        self.draw_progress_row(y=260, emoji="🗓️", title=data['month_name'], pct=data['month_pct'], sub=f"เหลืออีก {data['month_days_left']} วัน", bar_color=t["month_bar"], theme=t)
-        self.draw_progress_row(y=324, emoji="📅", title="สัปดาห์นี้", pct=data['week_pct'], sub=f"เหลืออีก {data['week_days_left']} วัน", bar_color=t["week_bar"], theme=t)
-        self.draw_progress_row(y=388, emoji="☀️", title="วันนี้ (Today)", pct=data['day_pct'], sub=f"เหลืออีก {data['day_hours']} ชม. {data['day_mins']} นาที", bar_color=t["day_bar"], theme=t)
+        # 3. Work & Off-Work Real-Time Countdown Row
+        if self.work_enabled:
+            self.draw_work_row(y=196, data=data, theme=t)
+            y_offset = 260
+        else:
+            y_offset = 196
 
-        # 4. Subtle Minimal Footer Quote
-        quote_y = 490
+        # 4. Unified Time Progress Rows
+        self.draw_progress_row(y=y_offset, emoji="🌍", title=f"ปี {data['year']}", pct=data['year_pct'], sub=f"เหลืออีก {data['year_days_left']} วัน", bar_color=t["year_bar"], theme=t)
+        self.draw_progress_row(y=y_offset + 64, emoji="🗓️", title=data['month_name'], pct=data['month_pct'], sub=f"เหลืออีก {data['month_days_left']} วัน", bar_color=t["month_bar"], theme=t)
+        self.draw_progress_row(y=y_offset + 128, emoji="📅", title="สัปดาห์นี้", pct=data['week_pct'], sub=f"เหลืออีก {data['week_days_left']} วัน", bar_color=t["week_bar"], theme=t)
+        self.draw_progress_row(y=y_offset + 192, emoji="☀️", title="วันนี้ (Today)", pct=data['day_pct'], sub=f"เหลืออีก {data['day_hours']} ชม. {data['day_mins']} นาที", bar_color=t["day_bar"], theme=t)
+
+        # 5. Subtle Minimal Footer Quote
+        quote_y = self.height - 48
         self.canvas.create_text(self.width // 2, quote_y, text="เวลาคือสิ่งเดียวที่ผ่านไปแล้วไม่ย้อนกลับ ✨", font=("Segoe UI", 8), fill=t["text_sub"])
-        self.canvas.create_text(self.width // 2, quote_y + 20, text="(คลิกที่การ์ดเป้าหมายเพื่อจัดการ Events ทั้งหมด)", font=("Segoe UI", 7), fill=t["text_sub"])
+        self.canvas.create_text(self.width // 2, quote_y + 18, text="(คลิกที่แถบเพื่อแก้ไขหรือตั้งค่า)", font=("Segoe UI", 7), fill=t["text_sub"])
 
     def draw_event_card(self, y, data, theme):
         x1 = 18
@@ -528,19 +619,15 @@ class TimeFlowWidget:
         y1 = y
         y2 = y + 68
 
-        # Sleek Card Background (Clickable -> Opens Event Manager)
         card_id = self.round_rect(x1, y1, x2, y2, r=14, fill=theme["card_bg"], outline=theme["goal_bar"], width=1.2)
         self.canvas.tag_bind(card_id, "<Button-1>", lambda e: self.open_event_manager())
 
-        # Icon
         t_icon = self.canvas.create_text(x1 + 12, y1 + 15, text="🎯", font=("Segoe UI Emoji", 10), anchor="w")
         self.canvas.tag_bind(t_icon, "<Button-1>", lambda e: self.open_event_manager())
 
-        # Title
         t_title = self.canvas.create_text(x1 + 28, y1 + 15, text=data['event']['title'], font=("Segoe UI", 9, "bold"), fill=theme["text_main"], anchor="w")
         self.canvas.tag_bind(t_title, "<Button-1>", lambda e: self.open_event_manager())
 
-        # Event Counter Indicator & Switchers (e.g. ◀ 1/3 ▶)
         if data['total_events'] > 1:
             btn_prev = self.canvas.create_text(x2 - 128, y1 + 15, text="◀", font=("Segoe UI", 8), fill=theme["text_sub"])
             self.canvas.tag_bind(btn_prev, "<Button-1>", lambda e: self.prev_event())
@@ -550,11 +637,9 @@ class TimeFlowWidget:
             btn_next = self.canvas.create_text(x2 - 100, y1 + 15, text="▶", font=("Segoe UI", 8), fill=theme["text_sub"])
             self.canvas.tag_bind(btn_next, "<Button-1>", lambda e: self.next_event())
 
-        # Live Badge (e.g. D-28 (14 ชม.))
         self.event_badge_id = self.canvas.create_text(x2 - 12, y1 + 15, text=data['event']['badge'], font=("Segoe UI", 9, "bold"), fill=theme["goal_glow"], anchor="e")
         self.canvas.tag_bind(self.event_badge_id, "<Button-1>", lambda e: self.open_event_manager())
 
-        # Progress bar
         bx1 = x1 + 12
         bx2 = x2 - 12
         by1 = y1 + 30
@@ -565,9 +650,35 @@ class TimeFlowWidget:
         if fill_w > bx1 + 2:
             self.round_rect(bx1, by1, fill_w, by2, r=2.5, fill=theme["goal_bar"])
 
-        # Subtext (Hourly countdown)
         self.event_sub_id = self.canvas.create_text(x1 + 12, y1 + 50, text=data['event']['sub'], font=("Segoe UI", 7), fill=theme["text_sub"], anchor="w")
         self.canvas.tag_bind(self.event_sub_id, "<Button-1>", lambda e: self.open_event_manager())
+
+    def draw_work_row(self, y, data, theme):
+        x1 = 20
+        x2 = self.width - 20
+        w = data["work"]
+
+        # Row 1: Title & Badge
+        t_icon = self.canvas.create_text(x1, y, text="💼", font=("Segoe UI Emoji", 10), anchor="w")
+        t_lbl = self.canvas.create_text(x1 + 20, y, text=w["title"], font=("Segoe UI", 9, "bold"), fill=theme["text_main"], anchor="w")
+        self.work_badge_id = self.canvas.create_text(x2, y, text=w["badge"], font=("Segoe UI", 9, "bold"), fill=theme["work_glow"], anchor="e")
+
+        # Row 2: Progress Bar
+        bx1 = x1
+        bx2 = x2
+        by1 = y + 14
+        by2 = by1 + 6
+
+        self.round_rect(bx1, by1, bx2, by2, r=3, fill=theme["track"])
+        fill_w = bx1 + (bx2 - bx1) * (w["pct"] / 100.0)
+        if fill_w > bx1 + 2:
+            self.round_rect(bx1, by1, fill_w, by2, r=3, fill=theme["work_bar"])
+
+        # Row 3: Subtitle
+        self.work_sub_id = self.canvas.create_text(x1, y + 30, text=w["sub"], font=("Segoe UI", 7), fill=theme["text_sub"], anchor="w")
+
+        for el in [t_icon, t_lbl, self.work_badge_id, self.work_sub_id]:
+            self.canvas.tag_bind(el, "<Button-1>", lambda e: self.open_work_dialog())
 
     def draw_progress_row(self, y, emoji, title, pct, sub, bar_color, theme):
         x1 = 20
@@ -593,7 +704,58 @@ class TimeFlowWidget:
         self.canvas.create_text(x1, y + 30, text=sub, font=("Segoe UI", 7), fill=theme["text_sub"], anchor="w")
 
     # ---------------------------------------------------------------------
-    # EVENT MANAGER DIALOG (Manage, Add, Edit, Delete Multiple Events)
+    # WORK HOURS SETTINGS DIALOG
+    # ---------------------------------------------------------------------
+    def open_work_dialog(self):
+        dialog = tk.Toplevel(self.root)
+        dialog.title("💼 ตั้งค่าเวลาทำงาน & เลิกงาน")
+        dialog.geometry("320x260")
+        dialog.resizable(False, False)
+        dialog.attributes("-topmost", True)
+
+        t = THEMES[self.theme_key]
+        dialog.config(bg=t["bg"])
+
+        lbl_head = tk.Label(dialog, text="💼 ตั้งค่าเวลานับถอยหลังเลิกงาน", font=("Segoe UI", 10, "bold"), bg=t["bg"], fg=t["text_main"])
+        lbl_head.pack(anchor="w", padx=20, pady=(16, 10))
+
+        # Start Time
+        lbl_start = tk.Label(dialog, text="เวลาเริ่มงาน (HH:MM เช่น 08:30):", bg=t["bg"], fg=t["text_main"], font=("Segoe UI", 8, "bold"))
+        lbl_start.pack(anchor="w", padx=20, pady=(0, 2))
+
+        entry_start = tk.Entry(dialog, font=("Segoe UI", 10), bg=t["card_bg"], fg=t["text_main"], insertbackground=t["text_main"], relief="flat")
+        entry_start.insert(0, self.work_start_time)
+        entry_start.pack(fill="x", padx=20, pady=(0, 8), ipady=3)
+
+        # End Time (Off-work)
+        lbl_end = tk.Label(dialog, text="เวลาเลิกงาน (HH:MM เช่น 17:30):", bg=t["bg"], fg=t["text_main"], font=("Segoe UI", 8, "bold"))
+        lbl_end.pack(anchor="w", padx=20, pady=(0, 2))
+
+        entry_end = tk.Entry(dialog, font=("Segoe UI", 10), bg=t["card_bg"], fg=t["text_main"], insertbackground=t["text_main"], relief="flat")
+        entry_end.insert(0, self.work_end_time)
+        entry_end.pack(fill="x", padx=20, pady=(0, 14), ipady=3)
+
+        def on_save():
+            s_val = entry_start.get().strip()
+            e_val = entry_end.get().strip()
+
+            try:
+                # Validate format
+                datetime.datetime.strptime(s_val, "%H:%M")
+                datetime.datetime.strptime(e_val, "%H:%M")
+                self.work_start_time = s_val
+                self.work_end_time = e_val
+                self.save_config()
+                self.draw_ui()
+                dialog.destroy()
+            except ValueError:
+                msgbox.showerror("รูปแบบเวลาไม่ถูกต้อง", "กรุณาใส่เวลาในรูปแบบ ชั่วโมง:นาที\nเช่น 08:30 หรือ 17:30", parent=dialog)
+
+        btn_save = tk.Button(dialog, text="บันทึกเวลาทำงาน 💾", bg=t["work_bar"], fg="#ffffff", font=("Segoe UI", 9, "bold"), relief="flat", command=on_save, cursor="hand2")
+        btn_save.pack(fill="x", padx=20, ipady=4)
+
+    # ---------------------------------------------------------------------
+    # EVENT MANAGER DIALOG
     # ---------------------------------------------------------------------
     def open_event_manager(self):
         dialog = tk.Toplevel(self.root)
@@ -605,7 +767,6 @@ class TimeFlowWidget:
         t = THEMES[self.theme_key]
         dialog.config(bg=t["bg"])
 
-        # Header
         head_frame = tk.Frame(dialog, bg=t["bg"])
         head_frame.pack(fill="x", padx=16, pady=(14, 8))
 
@@ -615,7 +776,6 @@ class TimeFlowWidget:
         btn_new = tk.Button(head_frame, text="➕ เพิ่ม Event", bg=t["goal_bar"], fg="#ffffff", font=("Segoe UI", 8, "bold"), relief="flat", cursor="hand2", command=lambda: [dialog.destroy(), self.open_add_event_dialog()])
         btn_new.pack(side="right")
 
-        # Scrollable list container
         list_canvas = tk.Canvas(dialog, bg=t["bg"], highlightthickness=0)
         scrollbar = tk.Scrollbar(dialog, orient="vertical", command=list_canvas.yview)
         scroll_frame = tk.Frame(list_canvas, bg=t["bg"])
@@ -654,7 +814,6 @@ class TimeFlowWidget:
             lbl_sub = tk.Label(card, text=ev_calc['sub'], font=("Segoe UI", 7), bg=t["card_bg"], fg=t["text_sub"], anchor="w")
             lbl_sub.pack(fill="x", padx=8, pady=(0, 4))
 
-            # Action Buttons Row
             btn_row = tk.Frame(card, bg=t["card_bg"])
             btn_row.pack(fill="x", padx=8, pady=(2, 2))
 
@@ -766,6 +925,11 @@ class TimeFlowWidget:
         if hasattr(self, 'event_badge_id') and not self.is_mini:
             self.canvas.itemconfig(self.event_badge_id, text=data['event']['badge'])
             self.canvas.itemconfig(self.event_sub_id, text=data['event']['sub'])
+
+        # Real-time live countdown for off-work shift
+        if hasattr(self, 'work_badge_id') and not self.is_mini:
+            self.canvas.itemconfig(self.work_badge_id, text=data['work']['badge'])
+            self.canvas.itemconfig(self.work_sub_id, text=data['work']['sub'])
         
         # Redraw full UI every minute to refresh progress bars
         now = datetime.datetime.now()
