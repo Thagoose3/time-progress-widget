@@ -1,7 +1,7 @@
 """
 TimeFlow - Ultra-Minimalist & Crystal-Clear Floating Desktop Widget
-Features High-DPI crisp rendering, transparent borderless glassmorphism,
-unified breathable layout, and interactive custom goal countdown.
+Supports Multiple Events/Milestones with Live Hourly/Minute Countdown,
+High-DPI crisp rendering, transparent glassmorphism, and minimal breathable UI.
 """
 
 import ctypes
@@ -123,7 +123,7 @@ class TimeFlowWidget:
 
         # Dimensions: Clean, sleek, non-cluttered
         self.width = 340
-        self.height = 540
+        self.height = 550
         self.root.geometry(f"{self.width}x{self.height}+{self.pos_x}+{self.pos_y}")
 
         # Dragging coordinates
@@ -150,9 +150,29 @@ class TimeFlowWidget:
         self.theme_key = "dark"
         self.is_pinned = False
         self.is_mini = False
-        self.goal_title = "วันรับปริญญา"
-        self.goal_date = "2026-12-24"
-        self.goal_start_date = "2026-01-01"
+        self.event_idx = 0
+
+        # Default Multi-Event List
+        self.events = [
+            {
+                "id": "1",
+                "title": "วันเกิดแฟนปีนี้",
+                "date": "2026-10-02 00:00",
+                "start_date": "2026-09-01"
+            },
+            {
+                "id": "2",
+                "title": "วันรับปริญญา",
+                "date": "2026-12-24 09:00",
+                "start_date": "2026-01-01"
+            },
+            {
+                "id": "3",
+                "title": "วันปีใหม่ 2027",
+                "date": "2027-01-01 00:00",
+                "start_date": "2026-01-01"
+            }
+        ]
 
         if os.path.exists(CONFIG_FILE):
             try:
@@ -163,11 +183,24 @@ class TimeFlowWidget:
                     self.theme_key = data.get('theme', 'dark')
                     self.is_pinned = data.get('pinned', False)
                     self.is_mini = data.get('mini', False)
-                    self.goal_title = data.get('goal_title', 'วันรับปริญญา')
-                    self.goal_date = data.get('goal_date', '2026-12-24')
-                    self.goal_start_date = data.get('goal_start_date', '2026-01-01')
+                    self.event_idx = data.get('event_idx', 0)
+                    
+                    saved_events = data.get('events', [])
+                    if saved_events and isinstance(saved_events, list):
+                        self.events = saved_events
+                    elif 'goal_title' in data and 'goal_date' in data:
+                        # Migrate old single goal
+                        self.events = [{
+                            "id": "1",
+                            "title": data.get('goal_title', 'เป้าหมายสำคัญ'),
+                            "date": data.get('goal_date', '2026-12-24') + " 00:00",
+                            "start_date": data.get('goal_start_date', '2026-01-01')
+                        }]
             except Exception:
                 pass
+
+        if self.event_idx >= len(self.events):
+            self.event_idx = 0
 
     def save_config(self):
         data = {
@@ -176,9 +209,8 @@ class TimeFlowWidget:
             'theme': self.theme_key,
             'pinned': self.is_pinned,
             'mini': self.is_mini,
-            'goal_title': self.goal_title,
-            'goal_date': self.goal_date,
-            'goal_start_date': self.goal_start_date
+            'event_idx': self.event_idx,
+            'events': self.events
         }
         try:
             with open(CONFIG_FILE, 'w', encoding='utf-8') as f:
@@ -193,7 +225,8 @@ class TimeFlowWidget:
 
         # Context Menu
         self.menu = tk.Menu(self.root, tearoff=0)
-        self.menu.add_command(label="🎯 ตั้งคู่วันเป้าหมาย (Set Target Goal)", command=self.open_goal_dialog)
+        self.menu.add_command(label="🎯 จัดการ Events ทั้งหมด (Manage Events)", command=self.open_event_manager)
+        self.menu.add_command(label="➕ เพิ่ม Event ใหม่ (Add New Event)", command=self.open_add_event_dialog)
         self.menu.add_separator()
         self.menu.add_command(label="📌 ตรึงลอยบนสุด (Always on Top)", command=self.toggle_pin)
         self.menu.add_command(label="➖ สลับโหมดแคปซูลเล็ก (Mini Mode)", command=self.toggle_mini)
@@ -235,11 +268,11 @@ class TimeFlowWidget:
     def toggle_mini(self):
         self.is_mini = not self.is_mini
         if self.is_mini:
-            self.width = 320
+            self.width = 330
             self.height = 58
         else:
             self.width = 340
-            self.height = 540
+            self.height = 550
         self.root.geometry(f"{self.width}x{self.height}")
         self.canvas.config(width=self.width, height=self.height)
         self.save_config()
@@ -255,50 +288,94 @@ class TimeFlowWidget:
         idx = keys.index(self.theme_key)
         self.set_theme(keys[(idx + 1) % len(keys)])
 
+    def next_event(self):
+        if not self.events:
+            return
+        self.event_idx = (self.event_idx + 1) % len(self.events)
+        self.save_config()
+        self.draw_ui()
+
+    def prev_event(self):
+        if not self.events:
+            return
+        self.event_idx = (self.event_idx - 1 + len(self.events)) % len(self.events)
+        self.save_config()
+        self.draw_ui()
+
     def close(self):
         self.save_config()
         self.root.destroy()
 
-    def open_goal_dialog(self):
-        dialog = tk.Toplevel(self.root)
-        dialog.title("ตั้งคู่วันเป้าหมาย 🎯")
-        dialog.geometry("320x220")
-        dialog.resizable(False, False)
-        dialog.attributes("-topmost", True)
-
-        t = THEMES[self.theme_key]
-        dialog.config(bg=t["bg"])
-
-        lbl_title = tk.Label(dialog, text="ชื่อเป้าหมาย / กิจกรรม:", bg=t["bg"], fg=t["text_main"], font=("Segoe UI", 9, "bold"))
-        lbl_title.pack(anchor="w", padx=22, pady=(16, 4))
-
-        entry_title = tk.Entry(dialog, font=("Segoe UI", 10), bg=t["card_bg"], fg=t["text_main"], insertbackground=t["text_main"], relief="flat")
-        entry_title.insert(0, self.goal_title)
-        entry_title.pack(fill="x", padx=22, pady=(0, 10), ipady=4)
-
-        lbl_date = tk.Label(dialog, text="วันเป้าหมาย (YYYY-MM-DD เช่น 2026-12-24):", bg=t["bg"], fg=t["text_main"], font=("Segoe UI", 9, "bold"))
-        lbl_date.pack(anchor="w", padx=22, pady=(0, 4))
-
-        entry_date = tk.Entry(dialog, font=("Segoe UI", 10), bg=t["card_bg"], fg=t["text_main"], insertbackground=t["text_main"], relief="flat")
-        entry_date.insert(0, self.goal_date)
-        entry_date.pack(fill="x", padx=22, pady=(0, 16), ipady=4)
-
-        def on_save():
-            new_title = entry_title.get().strip() or "เป้าหมายสำคัญ"
-            new_date_str = entry_date.get().strip()
+    def parse_datetime(self, date_str):
+        date_str = date_str.strip()
+        for fmt in ("%Y-%m-%d %H:%M:%S", "%Y-%m-%d %H:%M", "%Y-%m-%d"):
             try:
-                datetime.date.fromisoformat(new_date_str)
-                self.goal_title = new_title
-                self.goal_date = new_date_str
-                self.goal_start_date = datetime.date.today().isoformat()
-                self.save_config()
-                self.draw_ui()
-                dialog.destroy()
+                return datetime.datetime.strptime(date_str, fmt)
             except ValueError:
-                msgbox.showerror("รูปแบบวันที่ไม่ถูกต้อง", "กรุณาใส่วันที่ในรูปแบบ ปี-เดือน-วัน\nเช่น 2026-12-24", parent=dialog)
+                pass
+        return None
 
-        btn_save = tk.Button(dialog, text="บันทึกเป้าหมาย 💾", bg=t["goal_bar"], fg="#ffffff", font=("Segoe UI", 9, "bold"), relief="flat", command=on_save, cursor="hand2")
-        btn_save.pack(fill="x", padx=22, ipady=4)
+    def calculate_event_countdown(self, event_item):
+        now = datetime.datetime.now()
+        dt_str = event_item.get("date", "")
+        target_dt = self.parse_datetime(dt_str)
+
+        if not target_dt:
+            return {
+                "title": event_item.get("title", "เป้าหมาย"),
+                "badge": "ตั้งค่าวันที่",
+                "sub": f"วันที่ไม่ถูกต้อง: {dt_str}",
+                "pct": 0.0
+            }
+
+        diff = target_dt - now
+        total_seconds = int(diff.total_seconds())
+
+        # Progress from start_date
+        start_str = event_item.get("start_date", "")
+        start_dt = self.parse_datetime(start_str) or (target_dt - datetime.timedelta(days=30))
+        total_time_span = (target_dt - start_dt).total_seconds()
+        passed_time = (now - start_dt).total_seconds()
+
+        if total_time_span > 0:
+            pct = max(0.0, min(100.0, (passed_time / total_time_span) * 100))
+        else:
+            pct = 100.0 if total_seconds <= 0 else 0.0
+
+        target_display = target_dt.strftime("%d %b %Y %H:%M") if (target_dt.hour != 0 or target_dt.minute != 0) else target_dt.strftime("%d %b %Y")
+
+        if total_seconds > 0:
+            days = total_seconds // 86400
+            hours = (total_seconds % 86400) // 3600
+            mins = (total_seconds % 3600) // 60
+            secs = total_seconds % 60
+
+            if days > 0:
+                badge = f"D-{days} ({hours} ชม.)"
+                sub = f"เหลืออีก {days} วัน {hours} ชม. {mins} นาที ({target_display})"
+            else:
+                # Less than 24 hours (Ultra precise!)
+                badge = f"D-0 ({hours}h {mins}m)"
+                sub = f"เหลืออีก {hours} ชม. {mins} นาที {secs} วิ! 🔥"
+        elif total_seconds >= -86400:
+            badge = "D-Day! 🎉"
+            sub = f"วันนี้คือวันสำคัญ! ({target_display})"
+            pct = 100.0
+        else:
+            passed_seconds = abs(total_seconds)
+            p_days = passed_seconds // 86400
+            p_hours = (passed_seconds % 86400) // 3600
+            badge = f"D+{p_days}"
+            sub = f"ผ่านมาแล้ว {p_days} วัน {p_hours} ชม. ({target_display})"
+            pct = 100.0
+
+        return {
+            "title": event_item.get("title", "เป้าหมาย"),
+            "badge": badge,
+            "sub": sub,
+            "pct": pct,
+            "total_seconds": total_seconds
+        }
 
     def calculate_progress(self):
         now = datetime.datetime.now()
@@ -332,36 +409,16 @@ class TimeFlowWidget:
         day_hours = day_rem.seconds // 3600
         day_mins = (day_rem.seconds % 3600) // 60
 
-        # Target Goal Milestone
-        today_date = now.date()
-        try:
-            target_d = datetime.date.fromisoformat(self.goal_date)
-            goal_days_left = (target_d - today_date).days
-            
-            try:
-                start_d = datetime.date.fromisoformat(self.goal_start_date)
-            except Exception:
-                start_d = today_date
-
-            total_days = (target_d - start_d).days
-            passed_days = (today_date - start_d).days
-            if total_days > 0:
-                goal_pct = max(0.0, min(100.0, (passed_days / total_days) * 100))
-            else:
-                goal_pct = 100.0 if goal_days_left <= 0 else 0.0
-        except Exception:
-            goal_days_left = 0
-            goal_pct = 0.0
-
-        if goal_days_left > 0:
-            goal_badge = f"D-{goal_days_left} วัน"
-            goal_sub = f"เหลืออีก {goal_days_left} วัน ({self.goal_date})"
-        elif goal_days_left == 0:
-            goal_badge = "D-Day! 🎉"
-            goal_sub = "วันนี้คือวันเป้าหมายของคุณ!"
+        # Current Active Event
+        if self.events and 0 <= self.event_idx < len(self.events):
+            event_data = self.calculate_event_countdown(self.events[self.event_idx])
         else:
-            goal_badge = f"D+{abs(goal_days_left)} วัน"
-            goal_sub = f"ผ่านวันเป้าหมายมา {abs(goal_days_left)} วัน"
+            event_data = {
+                "title": "ยังไม่มี Event",
+                "badge": "คลิกเพื่อเพิ่ม",
+                "sub": "คลิกที่การ์ดเพื่อเพิ่ม Event แรกของคุณ 🎯",
+                "pct": 0.0
+            }
 
         return {
             "now": now,
@@ -376,11 +433,9 @@ class TimeFlowWidget:
             "day_pct": day_pct,
             "day_hours": day_hours,
             "day_mins": day_mins,
-            "goal_title": self.goal_title,
-            "goal_badge": goal_badge,
-            "goal_days_left": goal_days_left,
-            "goal_pct": goal_pct,
-            "goal_sub": goal_sub,
+            "event": event_data,
+            "total_events": len(self.events),
+            "event_num": self.event_idx + 1,
             "time_str": now.strftime("%H:%M:%S"),
             "date_str": f"{THAI_DAYS[now.isoweekday() % 7]}ที่ {now.day} {THAI_MONTHS[month - 1]} {year}"
         }
@@ -392,26 +447,33 @@ class TimeFlowWidget:
 
         if self.is_mini:
             # -------------------------------------------------------------
-            # MINI CAPSULE VIEW (Clean & Minimal)
+            # MINI CAPSULE VIEW (Clean & Minimal with Hourly Countdown)
             # -------------------------------------------------------------
             self.round_rect(4, 4, self.width - 4, self.height - 4, r=16, fill=t["bg"], outline=t["border"], width=1.2)
             
-            # Left icon & goal
-            self.canvas.create_text(18, self.height // 2, text="🎯", font=("Segoe UI Emoji", 11), anchor="w")
-            self.canvas.create_text(38, self.height // 2, text=f"{data['goal_title'][:9]}:", font=("Segoe UI", 9, "bold"), fill=t["text_main"], anchor="w")
+            # Left icon & switcher
+            self.canvas.create_text(16, self.height // 2, text="🎯", font=("Segoe UI Emoji", 10), anchor="w")
+            btn_prev = self.canvas.create_text(32, self.height // 2, text="◀", font=("Segoe UI", 7), fill=t["text_sub"])
+            self.canvas.tag_bind(btn_prev, "<Button-1>", lambda e: self.prev_event())
+
+            title_txt = data['event']['title'][:8]
+            self.canvas.create_text(44, self.height // 2, text=title_txt, font=("Segoe UI", 9, "bold"), fill=t["text_main"], anchor="w")
+
+            btn_next = self.canvas.create_text(105, self.height // 2, text="▶", font=("Segoe UI", 7), fill=t["text_sub"])
+            self.canvas.tag_bind(btn_next, "<Button-1>", lambda e: self.next_event())
             
             # Bar
-            bx1, by1, bx2, by2 = 120, (self.height // 2) - 3, 220, (self.height // 2) + 3
+            bx1, by1, bx2, by2 = 120, (self.height // 2) - 3, 210, (self.height // 2) + 3
             self.round_rect(bx1, by1, bx2, by2, r=3, fill=t["track"])
-            fill_w = bx1 + (bx2 - bx1) * (data['goal_pct'] / 100)
+            fill_w = bx1 + (bx2 - bx1) * (data['event']['pct'] / 100.0)
             if fill_w > bx1 + 3:
                 self.round_rect(bx1, by1, fill_w, by2, r=3, fill=t["goal_bar"])
 
             # Badge
-            self.canvas.create_text(230, self.height // 2, text=data['goal_badge'], font=("Segoe UI", 9, "bold"), fill=t["goal_glow"], anchor="w")
+            self.canvas.create_text(218, self.height // 2, text=data['event']['badge'], font=("Segoe UI", 8, "bold"), fill=t["goal_glow"], anchor="w")
             
             # Expand btn
-            btn_exp = self.canvas.create_text(self.width - 18, self.height // 2, text="➕", font=("Segoe UI", 10), fill=t["text_sub"])
+            btn_exp = self.canvas.create_text(self.width - 16, self.height // 2, text="➕", font=("Segoe UI", 10), fill=t["text_sub"])
             self.canvas.tag_bind(btn_exp, "<Button-1>", lambda e: self.toggle_mini())
             return
 
@@ -425,7 +487,10 @@ class TimeFlowWidget:
         self.canvas.create_text(24, 26, text="⏳", font=("Segoe UI Emoji", 12), anchor="w")
         self.canvas.create_text(46, 26, text="TimeFlow", font=("Segoe UI", 11, "bold"), fill=t["text_main"], anchor="w")
 
-        # Subtle Header Action Icons
+        # Header Buttons
+        btn_add = self.canvas.create_text(self.width - 114, 26, text="➕", font=("Segoe UI", 9), fill=t["text_sub"])
+        self.canvas.tag_bind(btn_add, "<Button-1>", lambda e: self.open_add_event_dialog())
+
         pin_color = t["accent"] if self.is_pinned else t["text_sub"]
         btn_pin = self.canvas.create_text(self.width - 92, 26, text="📌", font=("Segoe UI Emoji", 9), fill=pin_color)
         self.canvas.tag_bind(btn_pin, "<Button-1>", lambda e: self.toggle_pin())
@@ -443,51 +508,66 @@ class TimeFlowWidget:
         self.time_label_id = self.canvas.create_text(self.width // 2, 64, text=data["time_str"], font=("Segoe UI", 26, "bold"), fill=t["text_main"])
         self.date_label_id = self.canvas.create_text(self.width // 2, 92, text=data["date_str"], font=("Segoe UI", 9), fill=t["text_sub"])
 
-        # 2. Sleek Highlight Goal Card
-        self.draw_goal_card(y=114, data=data, theme=t)
+        # 2. Sleek Multi-Event Highlight Card with Hourly Countdown
+        self.draw_event_card(y=114, data=data, theme=t)
 
-        # 3. Unified Time Progress Rows (No Clunky Nested Boxes)
-        self.draw_progress_row(y=190, emoji="🌍", title=f"ปี {data['year']}", pct=data['year_pct'], sub=f"เหลืออีก {data['year_days_left']} วัน", bar_color=t["year_bar"], theme=t)
-        self.draw_progress_row(y=255, emoji="🗓️", title=data['month_name'], pct=data['month_pct'], sub=f"เหลืออีก {data['month_days_left']} วัน", bar_color=t["month_bar"], theme=t)
-        self.draw_progress_row(y=320, emoji="📅", title="สัปดาห์นี้", pct=data['week_pct'], sub=f"เหลืออีก {data['week_days_left']} วัน", bar_color=t["week_bar"], theme=t)
-        self.draw_progress_row(y=385, emoji="☀️", title="วันนี้ (Today)", pct=data['day_pct'], sub=f"เหลืออีก {data['day_hours']} ชม. {data['day_mins']} นาที", bar_color=t["day_bar"], theme=t)
+        # 3. Unified Time Progress Rows
+        self.draw_progress_row(y=196, emoji="🌍", title=f"ปี {data['year']}", pct=data['year_pct'], sub=f"เหลืออีก {data['year_days_left']} วัน", bar_color=t["year_bar"], theme=t)
+        self.draw_progress_row(y=260, emoji="🗓️", title=data['month_name'], pct=data['month_pct'], sub=f"เหลืออีก {data['month_days_left']} วัน", bar_color=t["month_bar"], theme=t)
+        self.draw_progress_row(y=324, emoji="📅", title="สัปดาห์นี้", pct=data['week_pct'], sub=f"เหลืออีก {data['week_days_left']} วัน", bar_color=t["week_bar"], theme=t)
+        self.draw_progress_row(y=388, emoji="☀️", title="วันนี้ (Today)", pct=data['day_pct'], sub=f"เหลืออีก {data['day_hours']} ชม. {data['day_mins']} นาที", bar_color=t["day_bar"], theme=t)
 
         # 4. Subtle Minimal Footer Quote
-        quote_y = 485
+        quote_y = 490
         self.canvas.create_text(self.width // 2, quote_y, text="เวลาคือสิ่งเดียวที่ผ่านไปแล้วไม่ย้อนกลับ ✨", font=("Segoe UI", 8), fill=t["text_sub"])
-        self.canvas.create_text(self.width // 2, quote_y + 20, text="(คลิกที่การ์ดเป้าหมายเพื่อแก้ไข)", font=("Segoe UI", 7), fill=t["text_sub"])
+        self.canvas.create_text(self.width // 2, quote_y + 20, text="(คลิกที่การ์ดเป้าหมายเพื่อจัดการ Events ทั้งหมด)", font=("Segoe UI", 7), fill=t["text_sub"])
 
-    def draw_goal_card(self, y, data, theme):
+    def draw_event_card(self, y, data, theme):
         x1 = 18
         x2 = self.width - 18
         y1 = y
-        y2 = y + 62
+        y2 = y + 68
 
-        # Sleek Card Background (Clickable)
+        # Sleek Card Background (Clickable -> Opens Event Manager)
         card_id = self.round_rect(x1, y1, x2, y2, r=14, fill=theme["card_bg"], outline=theme["goal_bar"], width=1.2)
-        self.canvas.tag_bind(card_id, "<Button-1>", lambda e: self.open_goal_dialog())
+        self.canvas.tag_bind(card_id, "<Button-1>", lambda e: self.open_event_manager())
 
-        # Title & Badge
-        t1 = self.canvas.create_text(x1 + 12, y1 + 15, text="🎯", font=("Segoe UI Emoji", 10), anchor="w")
-        t2 = self.canvas.create_text(x1 + 30, y1 + 15, text=data["goal_title"], font=("Segoe UI", 9, "bold"), fill=theme["text_main"], anchor="w")
-        t3 = self.canvas.create_text(x2 - 12, y1 + 15, text=data["goal_badge"], font=("Segoe UI", 9, "bold"), fill=theme["goal_glow"], anchor="e")
+        # Icon
+        t_icon = self.canvas.create_text(x1 + 12, y1 + 15, text="🎯", font=("Segoe UI Emoji", 10), anchor="w")
+        self.canvas.tag_bind(t_icon, "<Button-1>", lambda e: self.open_event_manager())
+
+        # Title
+        t_title = self.canvas.create_text(x1 + 28, y1 + 15, text=data['event']['title'], font=("Segoe UI", 9, "bold"), fill=theme["text_main"], anchor="w")
+        self.canvas.tag_bind(t_title, "<Button-1>", lambda e: self.open_event_manager())
+
+        # Event Counter Indicator & Switchers (e.g. ◀ 1/3 ▶)
+        if data['total_events'] > 1:
+            btn_prev = self.canvas.create_text(x2 - 128, y1 + 15, text="◀", font=("Segoe UI", 8), fill=theme["text_sub"])
+            self.canvas.tag_bind(btn_prev, "<Button-1>", lambda e: self.prev_event())
+
+            self.canvas.create_text(x2 - 114, y1 + 15, text=f"{data['event_num']}/{data['total_events']}", font=("Segoe UI", 7), fill=theme["text_sub"])
+
+            btn_next = self.canvas.create_text(x2 - 100, y1 + 15, text="▶", font=("Segoe UI", 8), fill=theme["text_sub"])
+            self.canvas.tag_bind(btn_next, "<Button-1>", lambda e: self.next_event())
+
+        # Live Badge (e.g. D-28 (14 ชม.))
+        self.event_badge_id = self.canvas.create_text(x2 - 12, y1 + 15, text=data['event']['badge'], font=("Segoe UI", 9, "bold"), fill=theme["goal_glow"], anchor="e")
+        self.canvas.tag_bind(self.event_badge_id, "<Button-1>", lambda e: self.open_event_manager())
 
         # Progress bar
         bx1 = x1 + 12
         bx2 = x2 - 12
-        by1 = y1 + 28
+        by1 = y1 + 30
         by2 = by1 + 5
 
         self.round_rect(bx1, by1, bx2, by2, r=2.5, fill=theme["track"])
-        fill_w = bx1 + (bx2 - bx1) * (data['goal_pct'] / 100.0)
+        fill_w = bx1 + (bx2 - bx1) * (data['event']['pct'] / 100.0)
         if fill_w > bx1 + 2:
             self.round_rect(bx1, by1, fill_w, by2, r=2.5, fill=theme["goal_bar"])
 
-        # Subtext
-        t4 = self.canvas.create_text(x1 + 12, y1 + 46, text=data["goal_sub"], font=("Segoe UI", 7), fill=theme["text_sub"], anchor="w")
-
-        for el in [t1, t2, t3, t4]:
-            self.canvas.tag_bind(el, "<Button-1>", lambda e: self.open_goal_dialog())
+        # Subtext (Hourly countdown)
+        self.event_sub_id = self.canvas.create_text(x1 + 12, y1 + 50, text=data['event']['sub'], font=("Segoe UI", 7), fill=theme["text_sub"], anchor="w")
+        self.canvas.tag_bind(self.event_sub_id, "<Button-1>", lambda e: self.open_event_manager())
 
     def draw_progress_row(self, y, emoji, title, pct, sub, bar_color, theme):
         x1 = 20
@@ -512,12 +592,182 @@ class TimeFlowWidget:
         # Row 3: Subtitle
         self.canvas.create_text(x1, y + 30, text=sub, font=("Segoe UI", 7), fill=theme["text_sub"], anchor="w")
 
+    # ---------------------------------------------------------------------
+    # EVENT MANAGER DIALOG (Manage, Add, Edit, Delete Multiple Events)
+    # ---------------------------------------------------------------------
+    def open_event_manager(self):
+        dialog = tk.Toplevel(self.root)
+        dialog.title("🎯 จัดการ Events ทั้งหมด")
+        dialog.geometry("360x420")
+        dialog.resizable(False, False)
+        dialog.attributes("-topmost", True)
+
+        t = THEMES[self.theme_key]
+        dialog.config(bg=t["bg"])
+
+        # Header
+        head_frame = tk.Frame(dialog, bg=t["bg"])
+        head_frame.pack(fill="x", padx=16, pady=(14, 8))
+
+        lbl_head = tk.Label(head_frame, text="🎯 รายการเป้าหมาย & Events", font=("Segoe UI", 11, "bold"), bg=t["bg"], fg=t["text_main"])
+        lbl_head.pack(side="left")
+
+        btn_new = tk.Button(head_frame, text="➕ เพิ่ม Event", bg=t["goal_bar"], fg="#ffffff", font=("Segoe UI", 8, "bold"), relief="flat", cursor="hand2", command=lambda: [dialog.destroy(), self.open_add_event_dialog()])
+        btn_new.pack(side="right")
+
+        # Scrollable list container
+        list_canvas = tk.Canvas(dialog, bg=t["bg"], highlightthickness=0)
+        scrollbar = tk.Scrollbar(dialog, orient="vertical", command=list_canvas.yview)
+        scroll_frame = tk.Frame(list_canvas, bg=t["bg"])
+
+        scroll_frame.bind(
+            "<Configure>",
+            lambda e: list_canvas.configure(scrollregion=list_canvas.bbox("all"))
+        )
+
+        list_canvas.create_window((0, 0), window=scroll_frame, anchor="nw", width=340)
+        list_canvas.configure(yscrollcommand=scrollbar.set)
+
+        list_canvas.pack(side="left", fill="both", expand=True, padx=(10, 0), pady=6)
+        scrollbar.pack(side="right", fill="y", padx=(0, 6), pady=6)
+
+        if not self.events:
+            lbl_empty = tk.Label(scroll_frame, text="ยังไม่มี Event ในรายการ\nกดปุ่ม '+ เพิ่ม Event' เพื่อเริ่มต้น", font=("Segoe UI", 9), bg=t["bg"], fg=t["text_sub"], pady=40)
+            lbl_empty.pack(fill="x")
+
+        for idx, ev in enumerate(self.events):
+            ev_calc = self.calculate_event_countdown(ev)
+            is_active = (idx == self.event_idx)
+
+            card = tk.Frame(scroll_frame, bg=t["card_bg"], highlightbackground=t["goal_bar"] if is_active else t["border"], highlightthickness=1)
+            card.pack(fill="x", padx=8, pady=4, ipady=4)
+
+            top_row = tk.Frame(card, bg=t["card_bg"])
+            top_row.pack(fill="x", padx=8, pady=(4, 2))
+
+            lbl_title = tk.Label(top_row, text=f"{'⭐ ' if is_active else ''}{ev['title']}", font=("Segoe UI", 9, "bold"), bg=t["card_bg"], fg=t["text_main"])
+            lbl_title.pack(side="left")
+
+            lbl_badge = tk.Label(top_row, text=ev_calc['badge'], font=("Segoe UI", 8, "bold"), bg=t["card_bg"], fg=t["goal_glow"])
+            lbl_badge.pack(side="right")
+
+            lbl_sub = tk.Label(card, text=ev_calc['sub'], font=("Segoe UI", 7), bg=t["card_bg"], fg=t["text_sub"], anchor="w")
+            lbl_sub.pack(fill="x", padx=8, pady=(0, 4))
+
+            # Action Buttons Row
+            btn_row = tk.Frame(card, bg=t["card_bg"])
+            btn_row.pack(fill="x", padx=8, pady=(2, 2))
+
+            def make_select_cmd(i):
+                return lambda: [setattr(self, 'event_idx', i), self.save_config(), self.draw_ui(), dialog.destroy()]
+
+            def make_edit_cmd(i):
+                return lambda: [dialog.destroy(), self.open_edit_event_dialog(i)]
+
+            def make_del_cmd(i):
+                return lambda: self.delete_event(i, dialog)
+
+            if not is_active:
+                btn_sel = tk.Button(btn_row, text="เลือกแสดงบนหน้าจอ", font=("Segoe UI", 7), bg=t["track"], fg=t["text_main"], relief="flat", cursor="hand2", command=make_select_cmd(idx))
+                btn_sel.pack(side="left", padx=(0, 4))
+
+            btn_edit = tk.Button(btn_row, text="✏️ แก้ไข", font=("Segoe UI", 7), bg=t["track"], fg=t["text_main"], relief="flat", cursor="hand2", command=make_edit_cmd(idx))
+            btn_edit.pack(side="left", padx=4)
+
+            btn_del = tk.Button(btn_row, text="🗑️ ลบ", font=("Segoe UI", 7), bg=t["track"], fg="#f87171", relief="flat", cursor="hand2", command=make_del_cmd(idx))
+            btn_del.pack(side="right", padx=4)
+
+    def delete_event(self, idx, parent_dialog):
+        if len(self.events) <= 1:
+            msgbox.showinfo("ไม่สามารถลบได้", "ต้องมี Event อย่างน้อย 1 รายการครับ", parent=parent_dialog)
+            return
+        del self.events[idx]
+        if self.event_idx >= len(self.events):
+            self.event_idx = max(0, len(self.events) - 1)
+        self.save_config()
+        self.draw_ui()
+        parent_dialog.destroy()
+        self.open_event_manager()
+
+    def open_add_event_dialog(self):
+        self.open_edit_event_dialog(event_index=None)
+
+    def open_edit_event_dialog(self, event_index=None):
+        is_edit = (event_index is not None and 0 <= event_index < len(self.events))
+        current_data = self.events[event_index] if is_edit else {
+            "title": "",
+            "date": (datetime.datetime.now() + datetime.timedelta(days=30)).strftime("%Y-%m-%d 00:00"),
+            "start_date": datetime.date.today().isoformat()
+        }
+
+        dialog = tk.Toplevel(self.root)
+        dialog.title("แก้ไข Event 🎯" if is_edit else "เพิ่ม Event ใหม่ ➕")
+        dialog.geometry("330x260")
+        dialog.resizable(False, False)
+        dialog.attributes("-topmost", True)
+
+        t = THEMES[self.theme_key]
+        dialog.config(bg=t["bg"])
+
+        lbl_title = tk.Label(dialog, text="ชื่อ Event / เป้าหมาย:", bg=t["bg"], fg=t["text_main"], font=("Segoe UI", 9, "bold"))
+        lbl_title.pack(anchor="w", padx=20, pady=(16, 4))
+
+        entry_title = tk.Entry(dialog, font=("Segoe UI", 10), bg=t["card_bg"], fg=t["text_main"], insertbackground=t["text_main"], relief="flat")
+        entry_title.insert(0, current_data.get("title", ""))
+        entry_title.pack(fill="x", padx=20, pady=(0, 10), ipady=4)
+
+        lbl_date = tk.Label(dialog, text="วัน/เวลาเป้าหมาย (YYYY-MM-DD หรือ YYYY-MM-DD HH:MM):", bg=t["bg"], fg=t["text_main"], font=("Segoe UI", 8, "bold"))
+        lbl_date.pack(anchor="w", padx=20, pady=(0, 4))
+
+        entry_date = tk.Entry(dialog, font=("Segoe UI", 10), bg=t["card_bg"], fg=t["text_main"], insertbackground=t["text_main"], relief="flat")
+        entry_date.insert(0, current_data.get("date", ""))
+        entry_date.pack(fill="x", padx=20, pady=(0, 16), ipady=4)
+
+        def on_save():
+            new_title = entry_title.get().strip() or "เป้าหมายใหม่"
+            new_date_str = entry_date.get().strip()
+
+            parsed = self.parse_datetime(new_date_str)
+            if not parsed:
+                msgbox.showerror("รูปแบบวันที่ไม่ถูกต้อง", "กรุณาใส่วันที่ในรูปแบบ:\n• 2026-10-02 (ปี-เดือน-วัน)\n• 2026-10-02 18:00 (ระบุเวลาชั่วโมง:นาที)", parent=dialog)
+                return
+
+            formatted_date = parsed.strftime("%Y-%m-%d %H:%M") if (parsed.hour != 0 or parsed.minute != 0) else parsed.strftime("%Y-%m-%d")
+
+            if is_edit:
+                self.events[event_index]["title"] = new_title
+                self.events[event_index]["date"] = formatted_date
+            else:
+                new_item = {
+                    "id": str(int(datetime.datetime.now().timestamp())),
+                    "title": new_title,
+                    "date": formatted_date,
+                    "start_date": datetime.date.today().isoformat()
+                }
+                self.events.append(new_item)
+                self.event_idx = len(self.events) - 1
+
+            self.save_config()
+            self.draw_ui()
+            dialog.destroy()
+
+        btn_save = tk.Button(dialog, text="บันทึก Event 💾", bg=t["goal_bar"], fg="#ffffff", font=("Segoe UI", 9, "bold"), relief="flat", command=on_save, cursor="hand2")
+        btn_save.pack(fill="x", padx=20, ipady=5)
+
     def update_loop(self):
+        data = self.calculate_progress()
+
+        # Real-time clock update
         if hasattr(self, 'time_label_id') and not self.is_mini:
-            data = self.calculate_progress()
             self.canvas.itemconfig(self.time_label_id, text=data["time_str"])
             self.canvas.itemconfig(self.date_label_id, text=data["date_str"])
+
+        # Real-time live countdown for active event
+        if hasattr(self, 'event_badge_id') and not self.is_mini:
+            self.canvas.itemconfig(self.event_badge_id, text=data['event']['badge'])
+            self.canvas.itemconfig(self.event_sub_id, text=data['event']['sub'])
         
+        # Redraw full UI every minute to refresh progress bars
         now = datetime.datetime.now()
         if now.second == 0:
             self.draw_ui()
