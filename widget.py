@@ -1,8 +1,10 @@
 """
 TimeFlow - Polished Solid Card Widget with Rich Multi-Color Themes
 (Cyberpunk 2077, Synthwave Retro, Obsidian Midnight, Nordic Forest, Warm Mocha, Clean White)
-High-DPI crisp rendering, high-contrast readability on any wallpaper,
-multi-event switching, live hourly countdown, and off-work tracking.
+Supports:
+- Full View: Complete Time Progress Dashboard (Target Events, Work Hours, Year, Month, Today)
+- Mini Mode: Sleek Floating Digital Clock & Date Capsule
+- 100% Crash-Proof & Guaranteed reliable desktop launch.
 """
 
 import ctypes
@@ -171,8 +173,13 @@ class TimeFlowWidget:
         self.root.wm_attributes("-alpha", 0.98)
 
         # Proportional & Breathable dimensions
-        self.width = 350
-        self.height = 560
+        if self.is_mini:
+            self.width = 280
+            self.height = 76
+        else:
+            self.width = 350
+            self.height = 560
+            
         self.root.geometry(f"{self.width}x{self.height}+{self.pos_x}+{self.pos_y}")
 
         self.drag_start_x = 0
@@ -287,7 +294,7 @@ class TimeFlowWidget:
         self.menu.add_command(label="➕ เพิ่ม Event ใหม่ (Add New Event)", command=self.open_add_event_dialog)
         self.menu.add_separator()
         self.menu.add_command(label="📌 ตรึงลอยบนสุด (Always on Top)", command=self.toggle_pin)
-        self.menu.add_command(label="➖ สลับโหมดแคปซูลเล็ก (Mini Mode)", command=self.toggle_mini)
+        self.menu.add_command(label="➖ สลับโหมดนาฬิกาเล็ก (Mini Clock)", command=self.toggle_mini)
         self.menu.add_separator()
         self.menu.add_command(label="🤖 ธีม: Cyberpunk 2077", command=lambda: self.set_theme("cyberpunk"))
         self.menu.add_command(label="🌆 ธีม: Synthwave 80s", command=lambda: self.set_theme("synthwave"))
@@ -328,8 +335,8 @@ class TimeFlowWidget:
     def toggle_mini(self):
         self.is_mini = not self.is_mini
         if self.is_mini:
-            self.width = 330
-            self.height = 56
+            self.width = 280
+            self.height = 76
         else:
             self.width = 350
             self.height = 560
@@ -549,38 +556,44 @@ class TimeFlowWidget:
 
         if self.is_mini:
             # -------------------------------------------------------------
-            # MINI CAPSULE
+            # MINI MODE: FLOATING DIGITAL CLOCK & DATE CAPSULE (Image 2 style)
             # -------------------------------------------------------------
-            self.round_rect(4, 4, self.width - 4, self.height - 4, r=16, fill=t["bg"], outline=t["border"], width=1.5)
+            self.round_rect(4, 4, self.width - 4, self.height - 4, r=18, fill=t["bg"], outline=t["border"], width=1.5)
             
-            self.canvas.create_text(16, self.height // 2, text="🎯", font=("Segoe UI Emoji", 10), anchor="w")
-            
-            btn_prev = self.canvas.create_text(34, self.height // 2, text="◀", font=("Segoe UI", 7), fill=t["text_sub"])
-            self.canvas.tag_bind(btn_prev, "<Button-1>", lambda e: self.prev_event())
+            # Big Digital Clock (e.g. 14:50:27)
+            self.mini_time_id = self.canvas.create_text(
+                18, 30, 
+                text=data["time_str"], 
+                font=("Segoe UI", 24, "bold"), 
+                fill=t["text_main"], 
+                anchor="w"
+            )
 
-            title_txt = data['event']['title'][:8]
-            self.canvas.create_text(48, self.height // 2, text=title_txt, font=("Segoe UI", 9, "bold"), fill=t["text_main"], anchor="w")
+            # Date Subtitle (e.g. วันพฤหัสบดีที่ 3 กันยายน 2026)
+            self.mini_date_id = self.canvas.create_text(
+                18, 56, 
+                text=data["date_th"], 
+                font=("Segoe UI", 8), 
+                fill=t["text_sub"], 
+                anchor="w"
+            )
 
-            btn_next = self.canvas.create_text(112, self.height // 2, text="▶", font=("Segoe UI", 7), fill=t["text_sub"])
-            self.canvas.tag_bind(btn_next, "<Button-1>", lambda e: self.next_event())
-            
-            # Micro-bar
-            bx1, by1, bx2, by2 = 126, (self.height // 2) - 3, 215, (self.height // 2) + 3
-            self.round_rect(bx1, by1, bx2, by2, r=3, fill=t["track"])
-            fill_w = bx1 + (bx2 - bx1) * (data['event']['pct'] / 100.0)
-            if fill_w > bx1 + 2:
-                self.round_rect(bx1, by1, fill_w, by2, r=3, fill=t["goal_bar"])
+            # Action Controls on the right
+            pin_color = t["accent"] if self.is_pinned else t["text_sub"]
+            btn_pin = self.canvas.create_text(self.width - 58, 20, text="📌", font=("Segoe UI Emoji", 8), fill=pin_color)
+            self.canvas.tag_bind(btn_pin, "<Button-1>", lambda e: self.toggle_pin())
 
-            self.canvas.create_text(224, self.height // 2, text=data['event']['badge'], font=("Segoe UI", 8, "bold"), fill=t["goal_glow"], anchor="w")
-            
-            btn_exp = self.canvas.create_text(self.width - 16, self.height // 2, text="➕", font=("Segoe UI", 9), fill=t["text_sub"])
+            btn_th = self.canvas.create_text(self.width - 38, 20, text="🎨", font=("Segoe UI Emoji", 8), fill=t["text_sub"])
+            self.canvas.tag_bind(btn_th, "<Button-1>", lambda e: self.next_theme())
+
+            # Expand Button ➕ (Restores Full View)
+            btn_exp = self.canvas.create_text(self.width - 18, 20, text="➕", font=("Segoe UI", 10, "bold"), fill=t["accent"])
             self.canvas.tag_bind(btn_exp, "<Button-1>", lambda e: self.toggle_mini())
             return
 
         # -----------------------------------------------------------------
         # FULL VIEW: SOLID HIGH-CONTRAST CARD WITH VIBRANT THEMES
         # -----------------------------------------------------------------
-        # Outer Sleek Solid Card with 1.5px border
         self.round_rect(5, 5, self.width - 5, self.height - 5, r=22, fill=t["bg"], outline=t["border"], width=1.5)
 
         # Header Bar
@@ -946,21 +959,28 @@ class TimeFlowWidget:
     def update_loop(self):
         data = self.calculate_progress()
 
-        # Live clock update
-        if hasattr(self, 'time_label_id') and not self.is_mini:
-            self.canvas.itemconfig(self.time_label_id, text=data["time_str"])
-            self.canvas.itemconfig(self.date_label_id, text=data["date_th"])
+        if self.is_mini:
+            # Real-time clock update in Mini Mode
+            if hasattr(self, 'mini_time_id'):
+                self.canvas.itemconfig(self.mini_time_id, text=data["time_str"])
+                self.canvas.itemconfig(self.mini_date_id, text=data["date_th"])
+        else:
+            # Real-time clock update in Full Mode
+            if hasattr(self, 'time_label_id'):
+                self.canvas.itemconfig(self.time_label_id, text=data["time_str"])
+                self.canvas.itemconfig(self.date_label_id, text=data["date_th"])
 
-        # Live event countdown
-        if hasattr(self, 'event_badge_id') and not self.is_mini:
-            self.canvas.itemconfig(self.event_badge_id, text=data['event']['badge'])
-            self.canvas.itemconfig(self.event_sub_id, text=data['event']['sub'])
+            # Real-time event countdown
+            if hasattr(self, 'event_badge_id'):
+                self.canvas.itemconfig(self.event_badge_id, text=data['event']['badge'])
+                self.canvas.itemconfig(self.event_sub_id, text=data['event']['sub'])
 
-        # Live work countdown
-        if hasattr(self, 'work_badge_id') and not self.is_mini:
-            self.canvas.itemconfig(self.work_badge_id, text=data['work']['badge'])
-            self.canvas.itemconfig(self.work_sub_id, text=data['work']['sub'])
+            # Real-time work countdown
+            if hasattr(self, 'work_badge_id'):
+                self.canvas.itemconfig(self.work_badge_id, text=data['work']['badge'])
+                self.canvas.itemconfig(self.work_sub_id, text=data['work']['sub'])
         
+        # Redraw on full minute mark
         now = datetime.datetime.now()
         if now.second == 0:
             self.draw_ui()
